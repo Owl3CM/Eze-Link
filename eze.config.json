@@ -1,0 +1,6 @@
+{
+    "name": "Crescent",
+    "clientName" :"CrescentLOL",
+    "swaggerUrl":"https://items.morabaaapps.com/swagger/v1/swagger.json",
+    "clientDir":"./API_GENRATED"
+}

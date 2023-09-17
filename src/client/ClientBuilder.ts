@@ -23,6 +23,10 @@ export default class ClientBuilder<RootKey extends string> {
 
   clearCashe = (storageKey?: string) => this.storable.clear(storageKey);
 
+  static clearCashe = (storageKey: string, storage: "localStorage" | "sessionStorage" = "sessionStorage") => {
+    Storable.clear(storage, storageKey);
+  };
+
   constructor({ Api = ApiService.create({}), limit, storage, storeKey, generateQuery, roots }: IClientFunctionsConstructor) {
     this.roots = roots;
     this.useCash = !!storeKey;

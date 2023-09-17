@@ -40,9 +40,17 @@ export default class Storable {
     else storage instanceof Storage ? (this.storage = storage) : null;
     this.storeKey = storeKey;
   }
+  static clear = (storage: "localStorage" | "sessionStorage", storageKey: string) => {
+    let _storage = storage === "localStorage" ? localStorage : sessionStorage;
+    for (let i = 0; i < _storage?.length; i++) {
+      let key = _storage.key(i) as string;
+      if (key.startsWith(storageKey)) _storage.removeItem(key);
+    }
+  };
 }
+type StorageType = "localStorage" | "sessionStorage" | "memoryStorage" | Storage;
 type StorableConstructor = {
-  storage?: "localStorage" | "sessionStorage" | "memoryStorage" | Storage;
+  storage?: StorageType;
   storeKey?: string;
 };
 

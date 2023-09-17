@@ -17,8 +17,9 @@
     "start": "vite",
     "build-scriptsTs": "yarn tsc --build scripts.tsconfig.json",
     "delete-scriptsJS": "rm -rf ./scriptsJS",
-    "client": "yarn build-scriptsTs && node ./dist/client.js",
-    "test": "yarn build && yarn client"
+    "client": "yarn build-scriptsTs && node ./dist/builder/client.js",
+    "test": "yarn build && yarn client",
+    "postinstall": "node ./dist/builder/client.js"
   },
   "bin": {
     "client": "./dist/client.js"
@@ -64,7 +65,9 @@
   },
   "keywords": [],
   "tags": [],
-  "dependencies": {},
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/Owl3CM/Client.git"
