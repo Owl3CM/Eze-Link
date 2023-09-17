@@ -32,7 +32,7 @@ export default class Storable {
 
   private getCleanString = (text = "") => this.storeKey + text.replace(/[?&=/!]/g, "-");
 
-  constructor({ storage, storeKey = "storable" }: StorableConstructor) {
+  constructor({ storage = "sessionStorage", storeKey = "storable" }: StorableConstructor) {
     this.storage = {} as Storage;
     if (storage === "localStorage") this.storage = localStorage;
     else if (storage === "sessionStorage") this.storage = sessionStorage;

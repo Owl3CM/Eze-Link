@@ -1,20 +1,3 @@
-export const ClientRoots = {
-  hub: "https://hubcore.morabaaapps.com/api",
-  items: "https://items.morabaaapps.com/api",
-  ownerTracker: "https://otracker.morabaaapps.com/api",
-  sales: "https://salereports.morabaaapps.com/api",
-  reps: "https://repsapi.morabaaapps.com/api",
-  restaurant: "https://rest.morabaaapps.com/api",
-  tickets: "https://tickets.morabaaapps.com/api",
-  notifications: "https://notifications.morabaaapps.com/api",
-  onlineDbBackup: "https://onlinedbbackup.morabaaapps.com/api",
-  devConsole: "https://devconsole.morabaaapps.com/api",
-  invoices: "https://saturn.morabaa.cloud/api",
-  currencies: "https://xchange.morabaaapps.com/api",
-  raphael: "https://raphael.morabaa.com",
-};
-export const getRoot = (root: keyof typeof ClientRoots) => ClientRoots[root];
-
 export const ApiService = {
   create: <Headers>({ headers, onResponse, onError, onRequest }: CreateApiProps<Headers>) => {
     const _apiService: IApiService<Headers> = {

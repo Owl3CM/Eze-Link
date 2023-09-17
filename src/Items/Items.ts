@@ -1,4 +1,11 @@
-import { createPostFunction, createCashedGetFunction, createLoadCleint, createPatchFunction, createDeleteFunction, createPutFunction } from "../ClientBuilder";
+import {
+  createPostFunction,
+  createCashedGetFunction,
+  createLoadCleint,
+  createPatchFunction,
+  createDeleteFunction,
+  createPutFunction,
+} from "../client/ClientBuilder";
 
 const root = "https://items.morabaaapps.com";
 export const getItemsClient = {

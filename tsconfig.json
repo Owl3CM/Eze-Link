@@ -29,7 +29,7 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["src"],
+  "include": ["src/client"],
   "exclude": ["src/vite", "src/test"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

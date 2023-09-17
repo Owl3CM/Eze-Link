@@ -1,7 +1,7 @@
 {
-  "name": "moon-style",
-  "version": "0.0.55",
-  "description": "moon-style",
+  "name": "eze-link",
+  "version": "0.0.1",
+  "description": "client",
   "main": "dist/index.js",
   "source": "src/index.ts",
   "private": false,
@@ -10,19 +10,18 @@
   },
   "type": "module",
   "scripts": {
-    "copy-config": "cp -r ./moon.config.default.json ./dist/moon.config.default.json",
-    "copy-config-schema": " cp -r ./moon.config.schema.json ./dist/moon.config.schema.json",
-    "build": "rm -rf dist && rollup -c --exports auto && yarn build-scriptsTs && yarn copy-config && yarn copy-config-schema && node ./scripts/insertCode.js",
+    "copy-config": "cp -r ./client.config.default.json ./dist/client.config.default.json",
+    "copy-config-schema": " cp -r ./client.config.schema.json ./dist/client.config.schema.json",
+    "build": "rm -rf dist && rollup -c --exports auto",
     "prod": "yarn build && node ./scripts/publish.js && git push",
     "start": "vite",
     "build-scriptsTs": "yarn tsc --build scripts.tsconfig.json",
     "delete-scriptsJS": "rm -rf ./scriptsJS",
-    "moon": "yarn build-scriptsTs && node ./dist/moon.js",
-    "test": "yarn build && yarn moon",
-    "postinstall": "chmod +x ./dist/client.js"
+    "client": "yarn build-scriptsTs && node ./dist/client.js",
+    "test": "yarn build && yarn client"
   },
   "bin": {
-    "moon": "./dist/client.js"
+    "client": "./dist/client.js"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
@@ -37,6 +36,7 @@
     "@types/react-router-dom": "^5.3.3",
     "@vitejs/plugin-react": "^3.1.0",
     "babel-loader": "^8.2.5",
+    "chalk": "^5.3.0",
     "fs": "^0.0.1-security",
     "postcss": "^8.4.16",
     "react": "^18.2.0",
@@ -67,10 +67,10 @@
   "dependencies": {},
   "repository": {
     "type": "git",
-    "url": "https://github.com/Owl3CM/Moon.git"
+    "url": "https://github.com/Owl3CM/Client.git"
   },
-  "homepage": "https://github.com/Owl3CM/Moon",
+  "homepage": "https://github.com/Owl3CM/Client",
   "bugs": {
-    "url": "https://github.com/Owl3CM/Moon/issues"
+    "url": "https://github.com/Owl3CM/Client/issues"
   }
 }
