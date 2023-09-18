@@ -123,10 +123,7 @@ const Controller = {
 export default Controller;
 
 // finshup will be called after all swaggers are generated
-const createTypesFile = () => {
-  const { SchemaTypes, ClientDir: dir } = Controller;
-  createFile({ dir, name: "Types.ts", content: SchemaTypes.join("") });
-};
+
 const createIndexFile = () => {
   const { Name, ClientDir: dir } = Controller;
   createFile({ dir, name: "index.ts", content: `export {default as ${Name} } from "./${Name}";` });
@@ -141,10 +138,24 @@ const createClientFile = () => {
 
 export function Finshup() {
   createClientFile();
-  createTypesFile();
+  // createTypesFile();
   createIndexFile();
   // formateScript(ClientController.ClientDir);
 }
+
+export const CreateConfigFolder = (tagByMethods, schemaTypes, dir = "Config") => {
+  createFolder(dir, {
+    config: {
+      name: "functions.ts",
+      content: `const tags=${JSON.stringify(tagByMethods, null, 4)}`,
+    },
+    types: {
+      dir,
+      name: "Types.ts",
+      content: schemaTypes.join(""),
+    },
+  });
+};
 
 type IClientController = typeof Controller;
 // {

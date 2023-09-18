@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { createFile, createFolder, readFile } from "../helpers/owlFs.js";
+import { createFolder, readFile } from "../helpers/owlFs.js";
 import fetch from "node-fetch";
 import Controller, { Finshup } from "./Controller.js";
 import { ExtractSchemaTypes } from "./extractSchemaTypes.js";
@@ -20,8 +20,6 @@ const start = async () => {
   Controller.ApiName = config.name;
   Controller.Root = root;
   Controller.ClientDir = config.clientDir;
-
-  createFolder(Controller.ClientDir);
   Controller.SchemaTypes = ExtractSchemaTypes(components.schemas);
   const tagByMethods = GroupMethodsByTag(paths);
 
@@ -36,8 +34,7 @@ const start = async () => {
 await Controller.init(config.clientName);
 
 await start();
-
-Finshup();
+if (config.buildFiles) Finshup();
 
 // const test = () => {
 

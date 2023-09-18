@@ -32,12 +32,7 @@ const clearOver = () => {
 };
 
 export const ConvertToFiles = (tagByMethods: TagByMethod) => {
-  createFolder("./Configs", {
-    config: {
-      name: "tags.ts",
-      content: `const tags=${JSON.stringify(tagByMethods, null, 4)}`,
-    },
-  });
+  createFolder(Controller.ClientDir);
   Object.entries(tagByMethods).forEach(([tag, methods]) => {
     clearOver();
     _CurrentTag = tag;
