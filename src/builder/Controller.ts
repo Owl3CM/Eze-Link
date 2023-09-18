@@ -65,18 +65,17 @@ const checkVersion = (v: string) => {
 };
 
 const getMethodCallName = (methodType: string, requestBody: any, pathParams: any, cleanName: string) => {
+  if (!cleanName) cleanName = "notFound";
   if (cleanName.includes("Login")) return `${cleanName}`;
+  const pathKeys = Object.keys(pathParams ?? {});
   let extra = "";
   let _newName = cleanName;
-  if (cleanName.endsWith("s") && (requestBody || (methodType === "delete" && Object.keys(pathParams).length))) {
+  if (cleanName.endsWith("s") && (requestBody || (methodType === "delete" && pathKeys.length))) {
     _newName = cleanName.slice(0, -1);
   }
-
   if (methodType === "get") {
-    if (Object.keys(pathParams).length && _newName.includes("By") === false)
-      return `${_newName}By${Object.keys(pathParams)
-        .map((pp) => pp.charAt(0).toUpperCase() + pp.slice(1))
-        .join("And")}`;
+    if (pathKeys.length && _newName.includes("By") === false)
+      return `${_newName}By${pathKeys.map((pp) => pp.charAt(0).toUpperCase() + pp.slice(1)).join("And")}`;
   } else if (methodType === "post") {
     extra = requestBody ? "create" : "post_";
   } else if (methodType === "put") {

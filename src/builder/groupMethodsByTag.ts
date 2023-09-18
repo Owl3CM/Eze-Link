@@ -37,13 +37,13 @@ export const GroupMethodsByTag = (paths: IPaths) => {
 
         const holder = tagByMethod[tag][path];
         const { pathParams, queryParams } = getParameters(parameters);
-        const pathName = "LOL"; // Controller.getCleanNameFromUrl(path?.replace("-", "_"))?.replace("-", "_");
+        const pathName = Controller.getCleanNameFromUrl(path?.replace("-", "_"))?.replace("-", "_");
         holder[method] = {
           pathParams: pathParams,
           queryParams: queryParams,
           requestBody: getRequestBodySchema(requestBody),
           successResponse: getMethodSuccessResponseSchema(responses),
-          // name: Controller.getMethodCallName(method, requestBody, pathParams, pathName),
+          name: Controller.getMethodCallName(method, requestBody, pathParams, pathName),
         };
 
         // remove empty objects

@@ -33,9 +33,9 @@ const clearOver = () => {
 
 export const ConvertToFiles = (tagByMethods: TagByMethod) => {
   createFolder("./Configs", {
-    main: {
+    config: {
       name: "tags.ts",
-      content: `const tags=${JSON.stringify(tagByMethods)}`,
+      content: `const tags=${JSON.stringify(tagByMethods, null, 4)}`,
     },
   });
   Object.entries(tagByMethods).forEach(([tag, methods]) => {

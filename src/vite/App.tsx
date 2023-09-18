@@ -1,24 +1,18 @@
 import React from "react";
 import { ApiService, ClientBuilder } from "../index";
 // import TestRoutes from "../test/TestRoutes";
+const roots = {
+  json: "https://jsonplaceholder.typicode.com",
+};
 const App = () => {
   const ClientApi = new ClientBuilder({
     storeKey: "test",
     storage: "memoryStorage",
-    Api: ApiService.create({
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    }),
+    roots,
   });
 
   const testLoad = async (clear) => {
-    const res = await ClientApi.GET_Cashed({
-      url: "https://jsonplaceholder.typicode.com/todos/1",
-      params: { id: 1 },
-      clearCash: clear,
-    });
+    const res = await ClientApi.GET_Cashed({ url: "/todos/1", params: { id: 1 }, clearCash: clear });
     console.log(res);
   };
 
