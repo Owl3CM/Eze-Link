@@ -1,6 +1,5 @@
+import { MultiBuilderGrid, Wrapper } from "morabaa-services";
 import React from "react";
-import { MultiBuilderGrid, Wrapper } from "../lib";
-
 const service = {
   data: [
     { id: 1, name: "test" },

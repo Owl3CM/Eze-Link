@@ -1,43 +1,5 @@
 import { createFile, createFolder, formateScript, readFile } from "../helpers/owlFs.js";
-
-// export const generateClient = async ([name, root]: string, split?: boolean) => {
-//   try {
-//     root = root.includes(".json") ? root : root.split(".com")[0] + ".com/swagger/v1/swagger.json";
-//     const data = await fetch(root).then((res) => {
-//       if (res.status === 404) return null;
-//       return res.json();
-//     });
-//     // const data = JSON.parse(await readFile("./gitHub.json"))
-//     if ((data as any)?.paths === undefined) {
-//       Controller.onError({ message: "Bad Swagger", name: "bad" }, `Client generation failed! ${Controller.Name ?? Controller.ApiName}`);
-//       return;
-//     }
-
-//     const { paths, components, info } = data as any;
-//     Controller.ApiName = info.title;
-//     Controller.Root = root.split("/swagger")[0];
-
-//     if (split) await Controller.init(name);
-
-//     createFolder(Controller.ClientDir);
-//     Controller.SchemaTypes = ExtractSchemaTypes(components.schemas);
-//     const tagByMethods = GroupMethodsByTag(paths);
-
-//     ConvertToFiles(tagByMethods);
-
-//     if (split) Finshup();
-
-//     console.log("Client generation completed successfully!");
-//   } catch (error) {
-//     Controller.onError(error, `Client generation failed! ${Controller.Name ?? Controller.ApiName}`);
-//   }
-//   createFolder("./TEST", {
-//     main: {
-//       name: "t.ts",
-//       content: Controller.SchemaTypes.join("\n"),
-//     },
-//   });
-// };
+import { EndpointsByTags } from "./groupMethodsByTag.js";
 
 const getCleanNameFromUrl = (url: string) => {
   let version = "";
@@ -88,10 +50,12 @@ const getMethodCallName = (methodType: string, requestBody: any, pathParams: any
 };
 
 const Controller = {
-  pathToBuilder: "../Builder",
+  pathToBuilder: "../../Builder",
   Name: "",
+  Title: "",
   SchemaTypes: [] as string[],
   AllTagsFunctions: [] as AllTagsFunctions[],
+  ConfigDir: "",
   Root: "",
   ClientDir: "",
   ApiName: "",
@@ -99,14 +63,24 @@ const Controller = {
   insertNewTag: (tag: string, _import: string, call: string) => {
     Controller.AllTagsFunctions[tag] = { _import, call };
   },
-  init: async (clientName: string) => {
-    const groupName = Controller.IsGroupInClientFolder ? "Client/" : "";
-    Controller.ClientDir = `./src/${groupName}${clientName}Client`;
-    Controller.Name = Controller.ClientDir.split("/").pop() ?? "";
-    Controller.SchemaTypes = [];
-    Controller.AllTagsFunctions = [];
-    Controller.GroupFolderIndexFiles.push(Controller.Name);
-    await createFolder(Controller.ClientDir);
+  clearOver: async ({ config, groupName, clientDir, type }) => {
+    Controller.Root = config.swaggerUrl.split("/swagger")[0];
+    const mainDir = `${clientDir}/${groupName}`;
+    Controller.MainDir = mainDir;
+    Controller.ConfigDir = `${groupName}Configs`;
+    Controller.Name = config.name;
+
+    if (type === "client") {
+      Controller.ApiName = config.name;
+      Controller.Title = config.tag;
+      Controller.ClientDir = `${mainDir}/${config.name}Client`;
+      await createFolder(mainDir);
+      Controller.GroupFolderIndexFiles.push(Controller.Name);
+      // await createFolder(Controller.ClientDir);
+    } else if (type === "swagger") {
+      Controller.AllTagsFunctions = [];
+      Controller.SchemaTypes = [];
+    }
   },
   onError: (error: Error, fileName = "error.txt", extra?: string) => {
     const err = "An error occurred during client generation:" + error.message + "\n" + extra;
@@ -116,45 +90,66 @@ const Controller = {
   IsGroupInClientFolder: false,
   PagenatedClients: [] as string[],
   GroupFolderIndexFiles: [] as string[],
+  MainDir: "",
 
   getMethodCallName,
   getCleanNameFromUrl,
 };
+
 export default Controller;
 
 // finshup will be called after all swaggers are generated
 
-const createIndexFile = () => {
-  const { Name, ClientDir: dir } = Controller;
-  createFile({ dir, name: "index.ts", content: `export {default as ${Name} } from "./${Name}";` });
+const createTypesFile = async (schemaTypes: any) => {
+  const { SchemaTypes, ClientDir: dir } = Controller;
+  const content = schemaTypes.join("\n") + SchemaTypes.join("\n");
+  await createFile({ dir, name: "Types.ts", content: content });
 };
-const createClientFile = () => {
+
+const createIndexFile = async () => {
+  // const { Name, ClientDir: dir } = Controller;
+  // await createFile({ dir, name: "index.ts", content: `export {default as ${Name} } from "./${Name}";` });
   const { Name, AllTagsFunctions, ClientDir: dir } = Controller;
   const tags = Object.values(AllTagsFunctions);
   const content = `${tags.map(({ _import }) => _import).join("")} const ${Name} = {${tags.map(({ call }) => call).join("")}}; export default ${Name};`;
 
-  createFile({ dir, name: `${Name}.ts`, content });
+  await createFile({ dir, name: `index.ts`, content });
 };
+// const createClientFile = async () => {
+//   const { Name, AllTagsFunctions, ClientDir: dir } = Controller;
+//   const tags = Object.values(AllTagsFunctions);
+//   const content = `${tags.map(({ _import }) => _import).join("")} const ${Name} = {${tags.map(({ call }) => call).join("")}}; export default ${Name};`;
 
-export function Finshup() {
-  createClientFile();
-  // createTypesFile();
-  createIndexFile();
+//   await createFile({ dir, name: `${Name}.ts`, content });
+// };
+
+export async function Finshup(schemaTypes: any) {
+  // await createClientFile();
+  await createIndexFile();
+  await createTypesFile(schemaTypes);
   // formateScript(ClientController.ClientDir);
 }
 
-export const CreateConfigFolder = (tagByMethods, schemaTypes, dir = "Config") => {
-  createFolder(dir, {
-    config: {
-      name: "functions.ts",
-      content: `const tags=${JSON.stringify(tagByMethods, null, 4)}`,
+export const CreateConfigFolder = (endpointsByTags: EndpointsByTags) => {
+  console.log("CreateConfigFolder", Controller.ConfigDir);
+
+  createFolder(Controller.ConfigDir, [
+    {
+      name: `${Controller.Name}_EndpointsByTags.json`,
+      content: `${JSON.stringify(endpointsByTags, null, 4)}`,
     },
-    types: {
-      dir,
-      name: "Types.ts",
-      content: schemaTypes.join(""),
+    {
+      name: `${Controller.Name}_Types.ts`,
+      content: Controller.SchemaTypes.join(""),
     },
-  });
+  ]);
+};
+
+export const GetEndpointsByTags = async (groupName) => {
+  Controller.ConfigDir = `${groupName}Configs`;
+  const endpointsByTags = JSON.parse(await readFile(`${Controller.ConfigDir}/${Controller.Name}_EndpointsByTags.json`));
+  const schemaTypes = (await readFile(`${Controller.ConfigDir}/${Controller.Name}_Types.ts`)).split("\n");
+  return { endpointsByTags, schemaTypes };
 };
 
 type IClientController = typeof Controller;

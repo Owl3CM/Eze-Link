@@ -66,8 +66,9 @@ export default class ClientBuilder<RootKey extends string> {
             }
             offset += stored.length;
             resolve(stored as Response);
-          } catch (error) {
-            reject(error);
+          } catch (err: any) {
+            err.retry = () => loadsFuctions.load(params, clearCash);
+            reject(err);
           }
         }),
       loadMore: () =>
@@ -78,8 +79,9 @@ export default class ClientBuilder<RootKey extends string> {
             offset += data.length;
             this.storable.insert(_storeKey, data);
             resolve(data as Response[]);
-          } catch (error) {
-            reject(error);
+          } catch (err: any) {
+            err.retry = () => loadsFuctions.loadMore();
+            reject(err);
           }
         }),
       reload: async (params: T) => await loadsFuctions.load(params, true),
@@ -113,8 +115,9 @@ export default class ClientBuilder<RootKey extends string> {
             const res = await this.Api.get({ url: _url, headers });
             offset += res.length;
             resolve(res as Response);
-          } catch (error) {
-            reject(error);
+          } catch (err: any) {
+            err.retry = () => loadsFuctions.load(params);
+            reject(err);
           }
         }),
       loadMore: () =>
@@ -124,8 +127,9 @@ export default class ClientBuilder<RootKey extends string> {
             const data = await this.Api.get({ url: _url, headers });
             offset += data.length;
             resolve(data as Response[]);
-          } catch (error) {
-            reject(error);
+          } catch (err: any) {
+            err.retry = () => loadsFuctions.loadMore();
+            reject(err);
           }
         }),
       reload: async (params: T) => await loadsFuctions.load(params),
@@ -157,8 +161,9 @@ export default class ClientBuilder<RootKey extends string> {
             }
             page++;
             resolve(stored as Response);
-          } catch (error) {
-            reject(error);
+          } catch (err: any) {
+            err.retry = () => loadsFuctions.load(params, clearCash);
+            reject(err);
           }
         }),
       loadMore: () =>
@@ -169,8 +174,9 @@ export default class ClientBuilder<RootKey extends string> {
             page++;
             this.storable.insert(_storeKey, data);
             resolve(data as Response[]);
-          } catch (error) {
-            reject(error);
+          } catch (err: any) {
+            err.retry = () => loadsFuctions.loadMore();
+            reject(err);
           }
         }),
       reload: async (params: T) => await loadsFuctions.load(params, true),
@@ -201,8 +207,9 @@ export default class ClientBuilder<RootKey extends string> {
             const res = await this.Api.get({ url: _url, headers });
             page++;
             resolve(res as Response);
-          } catch (error) {
-            reject(error);
+          } catch (err: any) {
+            err.retry = () => loadsFuctions.load(params);
+            reject(err);
           }
         }),
       loadMore: () =>
@@ -212,8 +219,9 @@ export default class ClientBuilder<RootKey extends string> {
             const data = await this.Api.get({ url: _url, headers });
             page++;
             resolve(data as Response[]);
-          } catch (error) {
-            reject(error);
+          } catch (err: any) {
+            err.retry = () => loadsFuctions.loadMore();
+            reject(err);
           }
         }),
       reload: async (params: T) => await loadsFuctions.load(params),

@@ -16,14 +16,14 @@ export type TagedMethod = {
   successResponse?: string;
 };
 
-export type TagByMethod = {
+export type EndpointsByTags = {
   [key: string]: {
     [key: string]: TagedMethod;
   };
 };
 
-export const GroupMethodsByTag = (paths: IPaths) => {
-  const tagByMethod: TagByMethod = {};
+export const GroupEndpointsByTags = (paths: IPaths) => {
+  const tagByMethod: EndpointsByTags = {};
 
   try {
     Object.entries(paths).forEach(([path, pathData]) => {

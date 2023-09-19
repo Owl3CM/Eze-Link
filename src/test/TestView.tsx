@@ -1,44 +1,25 @@
-import { setDefaultStateKit, ServiceStateBuilder, Api, StateListener, CardsContainer } from "../lib";
+import { setDefaultStateKit, ServiceStateBuilder, Api, StateListener, CardsContainer, Wrapper, QueryBuilder } from "morabaa-services";
 import React from "react";
 import { JsonBuilder } from "morabaa-utils";
-
-const service = {
-  items: [
-    { id: 1, name: "ali" },
-    { id: 2, name: "ali" },
-  ],
-  setItem: (item: any) => {
-    service.items = item;
-  },
-  onItemsChanged: (service: any) => {
-    console.log("change", service.items);
-  },
-};
-
-type TEST = {
-  items: any[];
-  setItem: (item: any) => void;
-};
+import Service from "./Service";
+import { Client } from "../../GROUP_Crescent";
 
 const TestView = () => {
+  Client.ItemsOfownerPagenated.load();
+  const service = React.useMemo(() => new Service(), []);
+  const queryBuilder = new QueryBuilder({ onQueryChange: service.setQueryParams });
   return (
-    <div>
-      <p
-        onClick={() => {
-          service.setItem({ id: 1, name: "LOL" });
-          console.log(service.items);
-        }}>
-        change
-      </p>
-      <StateListener
+    <Wrapper service={service}>
+      <CardsContainer stateName="data" service={service} itemBuilder={({ item }: any) => <JsonBuilder json={item} />} />
+      {/* <StateListener
         name="items"
         service={service}
         Component={({ items }) => {
           return items.map((item: any) => <p key={item.id}>{item.name}</p>);
         }}
-      />
+      /> */}
       {/* <CardsContainer stateName="items" service={service} itemBuilder={({ item }: any) => <JsonBuilder json={item} />} /> */}
-    </div>
+    </Wrapper>
   );
 };
 export default TestView;

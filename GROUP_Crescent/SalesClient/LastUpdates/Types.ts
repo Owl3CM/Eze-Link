@@ -1,0 +1,4 @@
+type LastupdatesOfbusinessByBusinessIdParams= {
+    businessId ? : string;
+
+}

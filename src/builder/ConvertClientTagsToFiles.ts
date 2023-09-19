@@ -1,6 +1,6 @@
 import { createFolder } from "../helpers/owlFs.js";
 import Controller from "./Controller.js";
-import { TagByMethod, TagedMethod } from "./groupMethodsByTag.js";
+import { EndpointsByTags, TagedMethod } from "./groupMethodsByTag.js";
 import { IPaths } from "./PathsTypes.js";
 
 const syncTagsFunctions = () => {
@@ -31,9 +31,9 @@ const clearOver = () => {
   _ExtraFunctinos = [];
 };
 
-export const ConvertToFiles = (tagByMethods: TagByMethod) => {
+export const ConvertToFiles = (endpointsByTags: EndpointsByTags) => {
   createFolder(Controller.ClientDir);
-  Object.entries(tagByMethods).forEach(([tag, methods]) => {
+  Object.entries(endpointsByTags).forEach(([tag, methods]) => {
     clearOver();
     _CurrentTag = tag;
     const funcName = `get${_CurrentTag}Client`;
@@ -52,7 +52,7 @@ const processing = (methods: TagedMethod, funcName: string) => {
                      ${_ExtraFunctinos.join("\n")}`;
 };
 
-const getMethodContent = ([endpoint, method]: [string, TagByMethod]) => {
+const getMethodContent = ([endpoint, method]: [string, EndpointsByTags]) => {
   let methodContent = "";
   const pathName = Controller.getCleanNameFromUrl(endpoint.replace("-", "_")).replace("-", "_");
   Object.entries(method).forEach(([methodType, methodValues]) => {
@@ -61,9 +61,10 @@ const getMethodContent = ([endpoint, method]: [string, TagByMethod]) => {
     const requestBody = methodValues.requestBody; //?? "any";
     const successResponse = methodValues.successResponse as string;
     const functionName = methodValues?.name ?? Controller.getMethodCallName(methodType, requestBody, pathParams, pathName);
+    const TestNaME = functionName as any;
 
     const itsLoadFunc = queryParams && (queryParams["offset"] || queryParams["Offset"]);
-    const extraProp = requestBody ? `${pathName.charAt(0).toLowerCase()}${pathName.slice(1)}` : false;
+    const extraProp = requestBody ? `${TestNaME.charAt(0).toLowerCase()}${TestNaME.slice(1)}` : false;
 
     let newType = "any";
     let perlCraises = "";
@@ -80,10 +81,11 @@ const getMethodContent = ([endpoint, method]: [string, TagByMethod]) => {
 
     const pathParamsContent = Object.keys(pathParams).join(",");
 
-    calledFunctionProps += `({${getUrl(endpoint)}${extraProp ? `, body: ${extraProp}` : ""}${queryParams ? ", params" : ""} })`;
+    calledFunctionProps += `({root:"${Controller.Title}",${getUrl(endpoint)}${extraProp ? `, body: ${extraProp}` : ""}${queryParams ? ", params" : ""} })`;
 
     if (Object.keys(allParams).length) {
-      newTypeName = itsLoadFunc ? `Load${pathName}Params` : `${pathName}Params`;
+      newTypeName = itsLoadFunc ? `Load${TestNaME}Params` : `${TestNaME}Params`;
+
       newType = getParamsType(newTypeName, allParams);
 
       if (!_TypesContent.some((t) => t === newType)) {
@@ -109,20 +111,20 @@ const getMethodContent = ([endpoint, method]: [string, TagByMethod]) => {
     else perlCraises = "()";
 
     if (itsLoadFunc) {
-      const extraFuncName = `get${pathName}PagenatedClient`;
-      const changedTypeName = `Load${pathName}Response`;
+      const extraFuncName = `get${TestNaME}PagenatedClient`;
+      const changedTypeName = `Load${TestNaME}Response`;
       Controller.SchemaTypes.push("type " + changedTypeName + " = " + successResponse + ";\n\n");
       _ExtraFunctinos.push(
-        `export const ${extraFuncName} = ${methodsScripts["offsetLoad"]}<${newTypeName},${changedTypeName}>
+        `export const ${extraFuncName} = Builder.${methodsScripts["offsetLoad"]}<${newTypeName},${changedTypeName}>
                                 ({${getPagenatedUrl(endpoint, pathParamsContent)}})`
       );
-      if (!Controller.PagenatedClients.includes(pathName)) Controller.PagenatedClients.push(pathName);
-      newTagCreated({ name: `${pathName}Pagenated`, funcName: extraFuncName });
+      if (!Controller.PagenatedClients.includes(TestNaME)) Controller.PagenatedClients.push(TestNaME);
+      newTagCreated({ name: `${TestNaME}Pagenated`, funcName: extraFuncName });
       return;
     }
 
     const response = successResponse ? `<${successResponse}>` : "";
-    const calledFunction = `${methodsScripts[methodType]}${response}`;
+    const calledFunction = `Builder.${methodsScripts[methodType]}${response}`;
     methodContent += `\n    ${functionName}: async ${perlCraises} => 
                  ${calledFunction}${calledFunctionProps},\n`;
   });
@@ -149,7 +151,7 @@ const getParamsType = (newTypeName, allParams) =>
 
 const getUrl = (url: string) => {
   if (url.includes("{")) url = url.split("{").join("${");
-  return `url: \`\${root}${url}\``;
+  return `url:"${url}"`;
 };
 
 const getPagenatedUrl = (url: string, pathParamsContent?: string) => {
@@ -161,36 +163,37 @@ const getPagenatedUrl = (url: string, pathParamsContent?: string) => {
 };
 
 function saveToFiles() {
-  const _client = {
-    index: {
+  const _client = [
+    {
       content: `export * from "./${_CurrentTag}" \n//export * from "./Types"`,
       name: "index.ts",
     },
-    types: {
+    {
       content: _TypesContent.map((t) => t.replace("-", "_")).join(""),
       name: "Types.ts",
     },
-    tags: {
+    {
       content: _TagContents,
       name: `${_CurrentTag}.ts`,
     },
-  };
+  ];
   createFolder(`${Controller.ClientDir}/${_CurrentTag}`, _client);
 }
 
 const getClientHeader = (methods: TagedMethod) => {
-  const values = Object.values(methods);
-  let hasOffset = true;
-  const importMethods = values
-    .map((values) => Object.keys(values))
-    .flat()
-    .filter((value, index, self) => self.indexOf(value) === index);
-  if (hasOffset) {
-    importMethods.push("load");
-  }
-  const importMethodsNames = importMethods.map((method) => methodsScripts[method]);
-
-  return `import { ${importMethodsNames.join(", ")} } from "${Controller.pathToBuilder}"; \n\nconst root ="${Controller.Root}";`;
+  // const values = Object.values(methods);
+  // let hasOffset = true;
+  // const importMethods = values
+  // .map((values) => Object.keys(values))
+  // .flat()
+  // .filter((value, index, self) => self.indexOf(value) === index);
+  // if (hasOffset) {
+  //   importMethods.push("load");
+  // }
+  return `import Builder from "${Controller.pathToBuilder}"; `;
+  // const root ="${Controller.Root}";
+  // const importMethodsNames = importMethods.map((method) => methodsScripts[method]);
+  // return `import { ${importMethodsNames.join(", ")} } from "${Controller.pathToBuilder}"; \n\nconst root ="${Controller.Root}";`;
 };
 
 const methodsScripts = {
