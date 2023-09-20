@@ -71,6 +71,7 @@ const Controller = {
     Controller.Name = config.name;
 
     if (type === "client") {
+      Controller.AllTagsFunctions = [];
       Controller.ApiName = config.name;
       Controller.Title = config.tag;
       Controller.ClientDir = `${mainDir}/${config.name}Client`;
@@ -78,7 +79,6 @@ const Controller = {
       Controller.GroupFolderIndexFiles.push(Controller.Name);
       // await createFolder(Controller.ClientDir);
     } else if (type === "swagger") {
-      Controller.AllTagsFunctions = [];
       Controller.SchemaTypes = [];
     }
   },
@@ -98,38 +98,6 @@ const Controller = {
 
 export default Controller;
 
-// finshup will be called after all swaggers are generated
-
-const createTypesFile = async (schemaTypes: any) => {
-  const { SchemaTypes, ClientDir: dir } = Controller;
-  const content = schemaTypes.join("\n") + SchemaTypes.join("\n");
-  await createFile({ dir, name: "Types.ts", content: content });
-};
-
-const createIndexFile = async () => {
-  // const { Name, ClientDir: dir } = Controller;
-  // await createFile({ dir, name: "index.ts", content: `export {default as ${Name} } from "./${Name}";` });
-  const { Name, AllTagsFunctions, ClientDir: dir } = Controller;
-  const tags = Object.values(AllTagsFunctions);
-  const content = `${tags.map(({ _import }) => _import).join("")} const ${Name} = {${tags.map(({ call }) => call).join("")}}; export default ${Name};`;
-
-  await createFile({ dir, name: `index.ts`, content });
-};
-// const createClientFile = async () => {
-//   const { Name, AllTagsFunctions, ClientDir: dir } = Controller;
-//   const tags = Object.values(AllTagsFunctions);
-//   const content = `${tags.map(({ _import }) => _import).join("")} const ${Name} = {${tags.map(({ call }) => call).join("")}}; export default ${Name};`;
-
-//   await createFile({ dir, name: `${Name}.ts`, content });
-// };
-
-export async function Finshup(schemaTypes: any) {
-  // await createClientFile();
-  await createIndexFile();
-  await createTypesFile(schemaTypes);
-  // formateScript(ClientController.ClientDir);
-}
-
 export const CreateConfigFolder = (endpointsByTags: EndpointsByTags) => {
   console.log("CreateConfigFolder", Controller.ConfigDir);
 
@@ -143,13 +111,6 @@ export const CreateConfigFolder = (endpointsByTags: EndpointsByTags) => {
       content: Controller.SchemaTypes.join(""),
     },
   ]);
-};
-
-export const GetEndpointsByTags = async (groupName) => {
-  Controller.ConfigDir = `${groupName}Configs`;
-  const endpointsByTags = JSON.parse(await readFile(`${Controller.ConfigDir}/${Controller.Name}_EndpointsByTags.json`));
-  const schemaTypes = (await readFile(`${Controller.ConfigDir}/${Controller.Name}_Types.ts`)).split("\n");
-  return { endpointsByTags, schemaTypes };
 };
 
 type IClientController = typeof Controller;

@@ -115,7 +115,7 @@ const getMethodContent = ([endpoint, method]: [string, EndpointsByTags]) => {
       const changedTypeName = `Load${TestNaME}Response`;
       Controller.SchemaTypes.push("type " + changedTypeName + " = " + successResponse + ";\n\n");
       _ExtraFunctinos.push(
-        `export const ${extraFuncName} = Builder.${methodsScripts["offsetLoad"]}<${newTypeName},${changedTypeName}>
+        `export const ${extraFuncName} = Builder.${methodsScripts["offsetLoad"]}<${newTypeName},${changedTypeName}[]>
                                 ({${getPagenatedUrl(endpoint, pathParamsContent)}})`
       );
       if (!Controller.PagenatedClients.includes(TestNaME)) Controller.PagenatedClients.push(TestNaME);
@@ -151,7 +151,7 @@ const getParamsType = (newTypeName, allParams) =>
 
 const getUrl = (url: string) => {
   if (url.includes("{")) url = url.split("{").join("${");
-  return `url:"${url}"`;
+  return `url:\`${url}\``;
 };
 
 const getPagenatedUrl = (url: string, pathParamsContent?: string) => {

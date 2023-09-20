@@ -1,6 +1,5 @@
 import { ClientService } from "morabaa-services";
-import { Client } from "../../API_GENRATED";
-import Builder from "../../API_GENRATED/Builder";
+import { Builder, Client } from "../../MainClient";
 
 Builder.Api.setHeader({
   Authorization: "kqHrOdtZmAOjI8ZC93ftc1bp8GMsire1rXGwf6e8ayESJyUU",

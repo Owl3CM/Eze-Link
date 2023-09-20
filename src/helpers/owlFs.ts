@@ -58,8 +58,6 @@ export async function deleteFolder(dir: string): Promise<void> {
 export async function runCommand(command: string): Promise<void> {
   const { exec } = await import("child_process");
   return new Promise((resolve, reject) => {
-    console.log({ command });
-
     exec(command, (error, stdout, stderr) => {
       if (error) {
         console.error(`exec error: ${error}`);
@@ -85,3 +83,15 @@ export async function readFile(dir: string): Promise<string> {
     throw new Error(`Failed to read file '${dir}'.`);
   }
 }
+
+export async function writeFile({ dir, content }: { dir: string; content: string }): Promise<void> {
+  try {
+    await fs.promises.writeFile(dir, content);
+    console.log(`File '${dir}' created successfully.`);
+  } catch (err) {
+    console.error(err);
+    throw new Error(`Failed to create file '${dir}'.`);
+  }
+}
+
+// export async function readDir(dir: string): Promise<string[]> {}

@@ -2,10 +2,9 @@ import { setDefaultStateKit, ServiceStateBuilder, Api, StateListener, CardsConta
 import React from "react";
 import { JsonBuilder } from "morabaa-utils";
 import Service from "./Service";
-import { Client } from "../../GROUP_Crescent";
+import { Client } from "../../MainClient";
 
 const TestView = () => {
-  Client.ItemsOfownerPagenated.load();
   const service = React.useMemo(() => new Service(), []);
   const queryBuilder = new QueryBuilder({ onQueryChange: service.setQueryParams });
   return (
