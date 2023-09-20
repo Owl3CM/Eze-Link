@@ -29,7 +29,8 @@ async function createBuilder() {
   await createFile({
     name: "Builder.ts",
     dir: Controller.MainDir,
-    content: `import ClientBuilder from "../src/client/ClientBuilder";
+    // content: `import ClientBuilder from "../src/client/ClientBuilder";
+    content: `import ClientBuilder from "eze-link";
     const Builder = new ClientBuilder({
     roots: {
          ${swaggers.map((swg) => `${swg.tag}: "${swg.swaggerUrl.split(".com")[0] + ".com"}"`).join(",\n")}
@@ -37,7 +38,7 @@ async function createBuilder() {
       storeKey: "${groupName}",
      });
     //  export const { DELETE, GET, GET_Cashed, PATCH, POST, POST_Cashed, PUT, Offset_Load_Cashed, Page_Load_Cashed, Page_Load, Offset_Load, UPDATE } = Builder;
-     export default Builder;
+      export default Builder;
      `,
   });
 }

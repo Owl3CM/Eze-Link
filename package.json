@@ -1,6 +1,6 @@
 {
   "name": "eze-link",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "client",
   "main": "dist/index.js",
   "source": "src/index.ts",
@@ -10,20 +10,21 @@
   },
   "type": "module",
   "scripts": {
-    "copy-config": "cp -r ./client.config.default.json ./dist/client.config.default.json",
+    "copy-config": "cp -r ./eze.config.default.json ./dist/eze.config.default.json",
     "copy-config-schema": " cp -r ./client.config.schema.json ./dist/client.config.schema.json",
     "build": "rm -rf dist && rollup -c --exports auto",
-    "prod": "yarn build && node ./scripts/publish.js && git push",
+    "prod": "yarn build && yarn copy-config && node ./scripts/publish.js && git push",
     "start": "vite",
     "build-scriptsTs": "yarn tsc --build scripts.tsconfig.json",
     "delete-scriptsJS": "rm -rf ./scriptsJS",
     "build-client": "yarn build-scriptsTs && node ./dist/builder/buildClient.js",
     "build-swagger": "yarn build-scriptsTs && node ./dist/builder/buildFromSwagger.js",
     "test": "yarn build && yarn client",
-    "postinstall": "node ./dist/builder/buildClient.js"
+    "postinstall": "chmod +x ./dist/builder/buildFromSwagger.js && chmod +x ./dist/builder/buildClient.js"
   },
   "bin": {
-    "client": "./dist/buildClient.js"
+    "build-client": "./dist/builder/buildClient.js",
+    "build-swagger": "./dist/builder/buildFromSwagger.js"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
