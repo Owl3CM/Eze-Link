@@ -1,6 +1,6 @@
 {
   "name": "eze-link",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "client",
   "main": "dist/index.js",
   "source": "src/index.ts",
@@ -12,7 +12,7 @@
   "scripts": {
     "copy-config": "cp -r ./eze.config.default.json ./dist/eze.config.default.json",
     "copy-config-schema": " cp -r ./client.config.schema.json ./dist/client.config.schema.json",
-    "build": "rm -rf dist && rollup -c --exports auto",
+    "build": "rm -rf dist && rollup -c --exports auto &&yarn build-scriptsTs",
     "prod": "yarn build && yarn copy-config && node ./scripts/publish.js && git push",
     "start": "vite",
     "build-scriptsTs": "yarn tsc --build scripts.tsconfig.json",
