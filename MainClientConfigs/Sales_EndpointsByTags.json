@@ -1,0 +1,370 @@
+{
+    "Accounts": {
+        "/api/v2/accounts/totals": {
+            "get": {
+                "queryParams": {
+                    "businessId": "string"
+                },
+                "successResponse": "SalesReportAPIDTOsResponsesV2AccountTotalsResponse",
+                "name": "AccountsTotalsV2"
+            }
+        },
+        "/api/v1/accounts": {
+            "get": {
+                "queryParams": {
+                    "offset": "number",
+                    "businessId": "string",
+                    "name": "string",
+                    "q": "string",
+                    "idsOnly": "boolean"
+                },
+                "successResponse": "SalesReportAPIDTOsResponsesAccountWithBalancesResponse",
+                "name": "Accounts"
+            },
+            "post": {
+                "requestBody": "SalesReportAPIDTOsRequestsCreateAccountRequest",
+                "successResponse": "SalesReportAPIEntitiesAccount",
+                "name": "createAccount"
+            },
+            "put": {
+                "requestBody": "SalesReportAPIDTOsRequestsCreateAccountRequest",
+                "successResponse": "SalesReportAPIEntitiesAccount",
+                "name": "editAccount"
+            }
+        },
+        "/api/v1/accounts/search": {
+            "get": {
+                "queryParams": {
+                    "businessId": "string",
+                    "accountName": "string"
+                },
+                "name": "AccountsSearch"
+            }
+        },
+        "/api/v1/accounts/totals": {
+            "get": {
+                "queryParams": {
+                    "businessId": "string"
+                },
+                "successResponse": "SalesReportAPIDTOsResponsesAccountsTotalsResponse",
+                "name": "AccountsTotals"
+            }
+        },
+        "/api/v1/accounts/count": {
+            "get": {
+                "queryParams": {
+                    "businessId": "string"
+                },
+                "name": "AccountsCount"
+            }
+        },
+        "/api/v1/accounts/{id}": {
+            "get": {
+                "pathParams": {
+                    "id": "string?"
+                },
+                "successResponse": "SalesReportAPIDTOsResponsesAccountWithBalancesResponse",
+                "name": "AccountsById"
+            },
+            "patch": {
+                "pathParams": {
+                    "id": "string?"
+                },
+                "requestBody": "SalesReportAPIDTOsRequestsUpdateAccountBalanceRequest",
+                "successResponse": "SalesReportAPIEntitiesAccount",
+                "name": "patch_Account"
+            }
+        },
+        "/api/v1/accounts/{businessId}/{morabaaId}": {
+            "delete": {
+                "pathParams": {
+                    "businessId": "string?",
+                    "morabaaId": "number?"
+                },
+                "name": "delete_Account"
+            }
+        },
+        "/api/v1/accounts/{id}/balances": {
+            "get": {
+                "pathParams": {
+                    "id": "string?"
+                },
+                "successResponse": "SalesReportAPIEntitiesBalance",
+                "name": "AccountsBalancesById"
+            }
+        },
+        "/api/v1/accounts/forrep": {
+            "post": {
+                "requestBody": "SalesReportAPIDTOsRequestsGetAccountsForRepresentativeRequest",
+                "successResponse": "SalesReportAPIEntitiesAccount",
+                "name": "createAccountsForrep"
+            }
+        },
+        "/api/v1/accounts/verify": {
+            "post": {
+                "requestBody": "SalesReportAPIDTOsRequestsAccountsVerificationRequest",
+                "name": "createAccountsVerify"
+            }
+        },
+        "/api/v1/accounts/byphone/{businessId}/{phoneNumber}": {
+            "get": {
+                "pathParams": {
+                    "businessId": "string?",
+                    "phoneNumber": "string?"
+                },
+                "successResponse": "SalesReportAPIDTOsResponsesAccountWithBalancesResponse",
+                "name": "AccountsByphone"
+            }
+        },
+        "/api/v1/accounts/ofbusiness/{businessId}/pending": {
+            "get": {
+                "pathParams": {
+                    "businessId": "string?"
+                },
+                "queryParams": {
+                    "offset": "number"
+                },
+                "successResponse": "SalesReportAPIEntitiesAccount",
+                "name": "AccountsOfbusinessPendingByBusinessId"
+            }
+        },
+        "/api/v1/accounts/forreps": {
+            "post": {
+                "requestBody": "SalesReportAPIDTOsRequestsGetAccountIdByMorabaaIdRequest",
+                "name": "createAccountsForrep"
+            }
+        },
+        "/api/v1/accounts/{id}/toggle-favorite": {
+            "post": {
+                "pathParams": {
+                    "id": "string?"
+                },
+                "name": "post_AccountsToggle_favorite"
+            }
+        },
+        "/api/v1/accounts/get-many": {
+            "post": {
+                "successResponse": "SalesReportAPIEntitiesAccount",
+                "name": "createAccountsGet_many"
+            }
+        }
+    },
+    "Balances": {
+        "/api/v1/balances": {
+            "post": {
+                "requestBody": "SalesReportAPIDTOsRequestsSetBalanceRequest",
+                "successResponse": "SalesReportAPIEntitiesBalance",
+                "name": "createBalance"
+            }
+        }
+    },
+    "Businesses": {
+        "/api/v1/businesses/{id}": {
+            "delete": {
+                "pathParams": {
+                    "id": "string?"
+                },
+                "name": "delete_Businesse"
+            }
+        },
+        "/api/v1/businesses/ofclient/{phoneNumber}": {
+            "get": {
+                "pathParams": {
+                    "phoneNumber": "string?"
+                },
+                "successResponse": "SalesReportAPIDTOsResponsesBusinessAndBalances",
+                "name": "BusinessesOfclientByPhoneNumber"
+            }
+        }
+    },
+    "BusinessTransactions": {
+        "/api/v1/businesstransactions/ofbusiness/{businessId}": {
+            "get": {
+                "pathParams": {
+                    "businessId": "string?"
+                },
+                "queryParams": {
+                    "type": "number",
+                    "date": "string"
+                },
+                "successResponse": "SalesReportAPIEntitiesBusinessTransaction",
+                "name": "BusinesstransactionsOfbusinessByBusinessId"
+            }
+        },
+        "/api/v1/businesstransactions": {
+            "get": {
+                "name": "Businesstransactions"
+            },
+            "post": {
+                "requestBody": "SalesReportAPIDTOsRequestsCreateBusinessTransactionRequest",
+                "successResponse": "SalesReportAPIEntitiesBusinessTransaction",
+                "name": "createBusinesstransaction"
+            }
+        }
+    },
+    "BusinessTransactionsV2": {
+        "/api/v2/businesstransactions/ofbusiness/{businessId}": {
+            "get": {
+                "pathParams": {
+                    "businessId": "string?"
+                },
+                "queryParams": {
+                    "BusinessId": "string",
+                    "DateGTE": "string",
+                    "DateLTE": "string",
+                    "Offset": "number",
+                    "Type": "SalesReportAPISharedEnumsBusinessTransactionType"
+                },
+                "successResponse": "SalesReportAPIEntitiesBusinessTransaction",
+                "name": "BusinesstransactionsOfbusinessV2ByBusinessId"
+            }
+        },
+        "/api/v2/businesstransactions": {
+            "get": {
+                "name": "BusinesstransactionsV2"
+            },
+            "post": {
+                "requestBody": "SalesReportAPIDTOsRequestsV2CreateBusinessTransactionRequestV2",
+                "successResponse": "SalesReportAPIEntitiesBusinessTransaction",
+                "name": "createBusinesstransactionsV2"
+            }
+        }
+    },
+    "LastUpdates": {
+        "/api/v1/lastupdates/ofbusiness/{businessId}": {
+            "get": {
+                "pathParams": {
+                    "businessId": "string?"
+                },
+                "successResponse": "SalesReportAPIEntitiesLastUpdate",
+                "name": "LastupdatesOfbusinessByBusinessId"
+            }
+        }
+    },
+    "Nets": {
+        "/api/v3/nets/{businessId}": {
+            "post": {
+                "pathParams": {
+                    "businessId": "string?"
+                },
+                "requestBody": "SalesReportAPIDTOsRequestsV3AddDailyNetRequest",
+                "successResponse": "SalesReportAPIEntitiesDailyNet",
+                "name": "createNetsV3"
+            }
+        },
+        "/api/v2/nets": {
+            "get": {
+                "successResponse": "SalesReportAPIDTOsResponsesV2DailyNetOfOwnerResponse",
+                "name": "NetsV2"
+            }
+        },
+        "/api/v2/nets/{businessId}": {
+            "post": {
+                "pathParams": {
+                    "businessId": "string?"
+                },
+                "requestBody": "SalesReportAPIDTOsRequestsV2AddDailyNetRequest",
+                "successResponse": "SalesReportAPIEntitiesDailyNet",
+                "name": "createNetsV2"
+            },
+            "get": {
+                "pathParams": {
+                    "businessId": "string?"
+                },
+                "queryParams": {
+                    "From": "string",
+                    "To": "string"
+                },
+                "successResponse": "SalesReportAPIDTOsResponsesV2DailyNetResponse",
+                "name": "NetsV2ByBusinessId"
+            }
+        },
+        "/api/v2/nets/{businessId}/this-month": {
+            "get": {
+                "pathParams": {
+                    "businessId": "string?"
+                },
+                "successResponse": "SalesReportAPIDTOsResponsesV2DailyNetResponse",
+                "name": "NetsThis_monthV2ByBusinessId"
+            }
+        }
+    },
+    "SalesPerDay": {
+        "/api/v1/salesperday": {
+            "get": {
+                "successResponse": "SalesReportAPIDTOsResponsesSalesPerDayOfOwnerResponse",
+                "name": "Salesperday"
+            }
+        },
+        "/api/v1/salesperday/{businessId}": {
+            "get": {
+                "pathParams": {
+                    "businessId": "string?"
+                },
+                "queryParams": {
+                    "offset": "number"
+                },
+                "successResponse": "SalesReportAPIEntitiesSalesPerDay",
+                "name": "SalesperdayByBusinessId"
+            },
+            "post": {
+                "pathParams": {
+                    "businessId": "string?"
+                },
+                "requestBody": "SalesReportAPIDTOsRequestsCreateSalesPerDayRequest",
+                "successResponse": "SalesReportAPIEntitiesSalesPerDay",
+                "name": "createSalesperday"
+            }
+        },
+        "/api/v1/salesperday/chartreport": {
+            "post": {
+                "queryParams": {
+                    "dt": "string",
+                    "reportType": "SalesReportAPISharedEnumsSalesReportType",
+                    "viewCurrencyId": "number"
+                },
+                "successResponse": "SalesReportAPIDTOsResponsesSalesPerDayChartPoint",
+                "name": "createSalesperdayChartreport"
+            }
+        }
+    },
+    "Transactions": {
+        "/api/v2/transactions": {
+            "post": {
+                "requestBody": "SalesReportAPIDTOsRequestsV2CreateTransactionRequest",
+                "successResponse": "SalesReportAPIEntitiesTransaction",
+                "name": "createTransactionsV2"
+            }
+        },
+        "/api/v1/transactions/expenses/{businessId}": {
+            "get": {
+                "pathParams": {
+                    "businessId": "string?"
+                },
+                "queryParams": {
+                    "offset": "number",
+                    "date": "string"
+                },
+                "successResponse": "SalesReportAPIEntitiesTransaction",
+                "name": "TransactionsExpensesByBusinessId"
+            }
+        },
+        "/api/v1/transactions/{accountId}/{currencyId}": {
+            "get": {
+                "pathParams": {
+                    "accountId": "string?",
+                    "currencyId": "number?"
+                },
+                "successResponse": "SalesReportAPIEntitiesTransaction",
+                "name": "TransactionsByAccountIdAndCurrencyId"
+            }
+        },
+        "/api/v1/transactions": {
+            "post": {
+                "requestBody": "SalesReportAPIDTOsRequestsCreateTransactionRequest",
+                "successResponse": "SalesReportAPIEntitiesTransaction",
+                "name": "createTransaction"
+            }
+        }
+    }
+}

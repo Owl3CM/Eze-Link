@@ -2,7 +2,7 @@
   "compilerOptions": {
     "outDir": "dist",
     "module": "esnext",
-    "lib": ["esnext"],
+    "lib": ["dom", "esnext"],
     "moduleResolution": "node",
     "sourceMap": true,
     "declaration": true,
@@ -29,7 +29,9 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["src"]
+  "include": ["src/client"],
+  "exclude": ["src/vite", "src/test"],
+  "references": [{ "path": "./tsconfig.node.json" }]
 }
 
 // {

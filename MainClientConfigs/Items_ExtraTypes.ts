@@ -1,0 +1,20 @@
+type LoadGroupsOfbusinessByBusinessIdResponse = MorabaaItemSolutionDomainInterfacesIGroup;
+
+
+type LoadItemsPendingV2Response = MorabaaItemSolutionDomainInterfacesIItem;
+
+
+type LoadItemsOfownerResponse = MorabaaItemSolutionRESTAPIDTOsResponsesMyMorabaaItemResponse;
+
+
+type LoadItemsResponse = MorabaaItemSolutionDomainInterfacesIItem;
+
+
+type LoadItemsOfgroupByGroupIdResponse = MorabaaItemSolutionRESTAPIDTOsResponsesRestaurantMenuItemResponse;
+
+
+type LoadOffersResponse = MorabaaItemSolutionRESTAPIDTOsResponsesItemOfferResponse;
+
+
+type LoadStoresOfbusinessByBusinessIdResponse = MorabaaItemSolutionDomainInterfacesIStore;
+
