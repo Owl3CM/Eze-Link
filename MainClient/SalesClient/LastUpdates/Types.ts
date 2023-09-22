@@ -1,3 +1,0 @@
-type LastupdatesOfbusinessByBusinessIdParams = {
-  businessId?: string;
-};

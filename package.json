@@ -1,7 +1,7 @@
 {
-  "name": "eze-link",
-  "version": "0.0.3",
-  "description": "client",
+  "name": "owl-fs",
+  "version": "0.0.1",
+  "description": "files service",
   "main": "dist/index.js",
   "source": "src/index.ts",
   "private": false,
@@ -10,26 +10,11 @@
   },
   "type": "module",
   "scripts": {
-    "copy-config": "cp -r ./eze.config.default.json ./dist/eze.config.default.json",
-    "copy-config-schema": " cp -r ./client.config.schema.json ./dist/client.config.schema.json",
-    "build": "rm -rf dist && rollup -c --exports auto &&yarn build-scriptsTs",
-    "prod": "yarn build && yarn copy-config && node ./scripts/publish.js && git push",
-    "start": "vite",
-    "build-scriptsTs": "yarn tsc --build scripts.tsconfig.json",
-    "delete-scriptsJS": "rm -rf ./scriptsJS",
-    "build-client": "yarn build-scriptsTs && node ./dist/builder/buildClient.js",
-    "build-swagger": "yarn build-scriptsTs && node ./dist/builder/buildFromSwagger.js",
-    "test": "yarn build && yarn client",
-    "postinstall": "chmod +x ./dist/builder/buildFromSwagger.js && chmod +x ./dist/builder/buildClient.js"
+    "build": "rm -rf dist && rollup -c --exports auto",
+    "prod": "yarn build && node ./scripts/publish.js && git push",
+    "start": "vite"
   },
-  "bin": {
-    "build-client": "./dist/builder/buildClient.js",
-    "build-swagger": "./dist/builder/buildFromSwagger.js"
-  },
-  "peerDependencies": {
-    "react": ">=18.0.0",
-    "react-dom": ">=18.0.0"
-  },
+  "peerDependencies": {},
   "devDependencies": {
     "@babel/core": "^7.19.3",
     "@rollup/plugin-commonjs": "^22.0.2",
@@ -39,21 +24,12 @@
     "@types/react-router-dom": "^5.3.3",
     "@vitejs/plugin-react": "^3.1.0",
     "babel-loader": "^8.2.5",
-    "chalk": "^5.3.0",
-    "fs": "^0.0.1-security",
-    "morabaa-utils": "^0.0.13",
-    "postcss": "^8.4.16",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.10.0",
     "rollup": "^2.79.1",
     "rollup-plugin-peer-deps-external": "^2.2.4",
-    "rollup-plugin-postcss": "^4.0.2",
     "rollup-plugin-terser": "^7.0.2",
     "rollup-plugin-typescript2": "^0.34.1",
     "ts-node": "^10.9.1",
-    "typescript": "^4.8.4",
-    "vite": "^4.2.1"
+    "typescript": "^4.8.4"
   },
   "files": [
     "dist"
@@ -69,8 +45,8 @@
   "keywords": [],
   "tags": [],
   "dependencies": {
-    "morabaa-services": "^1.0.81",
-    "node-fetch": "^3.3.2"
+    "chalk": "^5.3.0",
+    "fs": "^0.0.1-security"
   },
   "repository": {
     "type": "git",
