@@ -10,8 +10,6 @@
     "noImplicitThis": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
-    // "noImplicitReturns": true,
-    // "noUnusedParameters": true,
     "allowSyntheticDefaultImports": true,
     "target": "es5",
     "allowJs": true,
@@ -29,34 +27,5 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["src/client"],
-  "exclude": ["src/vite", "src/test"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": ["src"]
 }
-
-// {
-//   "compilerOptions": {
-//     "target": "ESNext",
-//     "useDefineForClassFields": true,
-//     "lib": ["DOM", "DOM.Iterable", "ESNext"],
-//     "allowJs": true,
-//     "skipLibCheck": true,
-//     "esModuleInterop": true,
-//     "allowSyntheticDefaultImports": true,
-//     // "strict": true,
-//     "forceConsistentCasingInFileNames": true,
-//     "module": "ESNext",
-//     "moduleResolution": "Node",
-//     "resolveJsonModule": true,
-//     "isolatedModules": true,
-//     "noEmit": true,
-//     "jsx": "react-jsx",
-//     "baseUrl": "./src",
-//     "paths": {
-//       "@/*": ["./*"]
-//     }
-//   },
-//   "include": ["src"],
-//   "exclude": ["src/vite", "src/test"],
-//   "references": [{ "path": "./tsconfig.node.json" }]
-// }

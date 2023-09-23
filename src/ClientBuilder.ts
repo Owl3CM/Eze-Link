@@ -8,7 +8,7 @@ type GetRoot<RootKey> = {
 export default class ClientBuilder<RootKey extends string> {
   limit = 25;
   storable: IStorable;
-  Api: IApiService<any>;
+  api: IApiService<any>;
   generateQuery = defaultGenerateQuery;
   useCash = false;
   roots: {
@@ -27,7 +27,7 @@ export default class ClientBuilder<RootKey extends string> {
     Storable.clear(storage, storageKey);
   };
 
-  constructor({ Api = ApiService.create({}), limit, storage, storeKey, generateQuery, roots }: IClientFunctionsConstructor) {
+  constructor({ api = ApiService.create({}), limit, storage, storeKey, generateQuery, roots }: IClientFunctionsConstructor) {
     this.roots = roots;
     this.useCash = !!storeKey;
     this.storable = this.useCash ? new Storable({ storage, storeKey }) : (null as any);
@@ -37,7 +37,7 @@ export default class ClientBuilder<RootKey extends string> {
       this.Offset_Load_Cashed = this.Offset_Load;
       this.Page_Load_Cashed = this.Page_Load;
     }
-    this.Api = Api;
+    this.api = api;
     if (generateQuery) this.generateQuery = generateQuery;
     if (limit) this.limit = limit;
   }
@@ -61,7 +61,7 @@ export default class ClientBuilder<RootKey extends string> {
             const _url = query + `&offset=${offset}`;
             let stored = clearCash ? null : this.storable.get(_storeKey);
             if (!stored) {
-              stored = await this.Api.get({ url: _url, headers });
+              stored = await this.api.get({ url: _url, headers });
               this.storable.set(_storeKey, stored);
             }
             offset += stored.length;
@@ -75,7 +75,7 @@ export default class ClientBuilder<RootKey extends string> {
         new Promise(async (resolve, reject) => {
           try {
             const _url = query + `&offset=${offset}`;
-            const data = await this.Api.get({ url: _url, headers });
+            const data = await this.api.get({ url: _url, headers });
             offset += data.length;
             this.storable.insert(_storeKey, data);
             resolve(data as Response[]);
@@ -112,7 +112,7 @@ export default class ClientBuilder<RootKey extends string> {
             headers = getHeaders?.(params);
             query = this.generateQuery({ url: _BuildUrl(params), params: { limit: this.limit, ...params } });
             const _url = query + `&offset=${offset}`;
-            const res = await this.Api.get({ url: _url, headers });
+            const res = await this.api.get({ url: _url, headers });
             offset += res.length;
             resolve(res as Response);
           } catch (err: any) {
@@ -124,7 +124,7 @@ export default class ClientBuilder<RootKey extends string> {
         new Promise(async (resolve, reject) => {
           try {
             const _url = query + `&offset=${offset}`;
-            const data = await this.Api.get({ url: _url, headers });
+            const data = await this.api.get({ url: _url, headers });
             offset += data.length;
             resolve(data as Response[]);
           } catch (err: any) {
@@ -132,7 +132,7 @@ export default class ClientBuilder<RootKey extends string> {
             reject(err);
           }
         }),
-      reload: async (params: T) => await loadsFuctions.load(params),
+      reload: async (params?: T) => await loadsFuctions.load(params),
     };
     return loadsFuctions;
   };
@@ -156,7 +156,7 @@ export default class ClientBuilder<RootKey extends string> {
             const _url = query + `&page=${page}`;
             let stored = clearCash ? null : this.storable.get(_storeKey);
             if (!stored) {
-              stored = await this.Api.get({ url: _url, headers });
+              stored = await this.api.get({ url: _url, headers });
               this.storable.set(_storeKey, stored);
             }
             page++;
@@ -170,7 +170,7 @@ export default class ClientBuilder<RootKey extends string> {
         new Promise(async (resolve, reject) => {
           try {
             const _url = query + `&page=${page}`;
-            const data = await this.Api.get({ url: _url, headers });
+            const data = await this.api.get({ url: _url, headers });
             page++;
             this.storable.insert(_storeKey, data);
             resolve(data as Response[]);
@@ -179,7 +179,7 @@ export default class ClientBuilder<RootKey extends string> {
             reject(err);
           }
         }),
-      reload: async (params: T) => await loadsFuctions.load(params, true),
+      reload: async (params?: T) => await loadsFuctions.load(params, true),
       // insert: (data: Response[]) => {
       //     this.storage.insert(_storeKey, data);
       // },
@@ -204,7 +204,7 @@ export default class ClientBuilder<RootKey extends string> {
             headers = getHeaders?.(params);
             query = this.generateQuery({ url: _BuildUrl(params), params: { limit: this.limit, ...params } });
             const _url = query + `&page=${page}`;
-            const res = await this.Api.get({ url: _url, headers });
+            const res = await this.api.get({ url: _url, headers });
             page++;
             resolve(res as Response);
           } catch (err: any) {
@@ -216,7 +216,7 @@ export default class ClientBuilder<RootKey extends string> {
         new Promise(async (resolve, reject) => {
           try {
             const _url = query + `&page=${page}`;
-            const data = await this.Api.get({ url: _url, headers });
+            const data = await this.api.get({ url: _url, headers });
             page++;
             resolve(data as Response[]);
           } catch (err: any) {
@@ -224,7 +224,7 @@ export default class ClientBuilder<RootKey extends string> {
             reject(err);
           }
         }),
-      reload: async (params: T) => await loadsFuctions.load(params),
+      reload: async (params?: T) => await loadsFuctions.load(params),
     };
     return loadsFuctions;
   };
@@ -234,7 +234,7 @@ export default class ClientBuilder<RootKey extends string> {
       const retry = () => this.GET({ root, url, params, headers });
       try {
         const query = defaultGenerateQuery({ url: this.getRoot({ root, url }), params });
-        const res = await this.Api.get({ url: query, headers });
+        const res = await this.api.get({ url: query, headers });
         resolve(res);
       } catch (error) {
         const _err = error as IError;
@@ -249,7 +249,7 @@ export default class ClientBuilder<RootKey extends string> {
         const query = defaultGenerateQuery({ url: this.getRoot({ root, url }), params });
         let stored = clearCash ? null : this.storable.get(storageKey + query);
         if (!stored) {
-          stored = await this.Api.get({ url: query, headers });
+          stored = await this.api.get({ url: query, headers });
           this.storable.set(storageKey + query, stored);
         }
         resolve(stored);
@@ -265,7 +265,7 @@ export default class ClientBuilder<RootKey extends string> {
       const retry = () => this.POST({ root, url, params, headers, body });
       try {
         const query = defaultGenerateQuery({ url: this.getRoot({ root, url }), params });
-        const res = await this.Api.post({ url: query, body, headers: headers ?? getHeaders?.(params) });
+        const res = await this.api.post({ url: query, body, headers: headers ?? getHeaders?.(params) });
         onSuccess?.(res);
         resolve(res);
       } catch (error) {
@@ -284,7 +284,7 @@ export default class ClientBuilder<RootKey extends string> {
         const storeKey = storageKey + query;
         let stored = clearCash ? null : this.storable.get(storeKey);
         if (!stored) {
-          stored = await this.Api.post({ url: query, body, headers: headers ?? getHeaders?.(params) });
+          stored = await this.api.post({ url: query, body, headers: headers ?? getHeaders?.(params) });
           this.storable.set(storeKey, stored);
           onSuccess?.(stored);
         }
@@ -302,7 +302,7 @@ export default class ClientBuilder<RootKey extends string> {
       const retry = () => this.PUT({ root, url, params, body });
       try {
         const query = defaultGenerateQuery({ url, params });
-        const res = await this.Api.put({ url: query, body, headers });
+        const res = await this.api.put({ url: query, body, headers });
         onSuccess?.(res);
         resolve(res);
       } catch (error) {
@@ -317,7 +317,7 @@ export default class ClientBuilder<RootKey extends string> {
       const retry = () => this.UPDATE({ root, url, params, body });
       try {
         const query = defaultGenerateQuery({ url: this.getRoot({ root, url }), params });
-        const res = await this.Api.patch({ url: query, body });
+        const res = await this.api.patch({ url: query, body });
         onSuccess?.(res);
         resolve(res);
       } catch (error) {
@@ -331,7 +331,7 @@ export default class ClientBuilder<RootKey extends string> {
       const retry = () => this.PATCH({ root, url, params, body });
       try {
         const query = defaultGenerateQuery({ url: this.getRoot({ root, url }), params });
-        const res = await this.Api.patch({ url: query, body });
+        const res = await this.api.patch({ url: query, body });
         onSuccess?.(res);
         resolve(res);
       } catch (error) {
@@ -346,7 +346,7 @@ export default class ClientBuilder<RootKey extends string> {
       const retry = () => this.DELETE({ root, url, params });
       try {
         const query = defaultGenerateQuery({ url: this.getRoot({ root, url }), params });
-        const res = await this.Api.delete({ url: query });
+        const res = await this.api.delete({ url: query });
         onSuccess?.(res);
         resolve(res);
       } catch (error) {
@@ -386,7 +386,7 @@ type CreateCashedLoadCleintProps<T, RootKey> = ({ url: string; getUrl?: null } |
 
 type IClientFunctionsConstructor =
   | {
-      Api?: IApiService<any>;
+      api?: IApiService<any>;
       limit?: number;
       storeKey?: string;
       storage?: undefined;
@@ -396,7 +396,7 @@ type IClientFunctionsConstructor =
       };
     }
   | {
-      Api?: IApiService<any>;
+      api?: IApiService<any>;
       limit?: number;
       storeKey: string;
       storage?: "localStorage" | "sessionStorage" | "memoryStorage";
@@ -404,7 +404,7 @@ type IClientFunctionsConstructor =
       roots: {};
     }
   | {
-      Api?: IApiService<any>;
+      api?: IApiService<any>;
       limit?: number;
       storeKey: string;
       storage: "localStorage" | "sessionStorage" | "memoryStorage";
@@ -413,7 +413,7 @@ type IClientFunctionsConstructor =
     };
 // | {
 //     useCash?: true;
-//     Api: IApiService<any>;
+//     api: IApiService<any>;
 //     limit?: number;
 //     storable?: undefined;
 //     storage?: Storage;
