@@ -21,7 +21,7 @@ The `ApiService` module provides a set of methods for making API requests. You c
 ```javascript
 import { ApiService } from 'eze-link';
 
-const api = ApiService.create();
+const api = ApiService.create({});
 
 api.get({ url: 'https://example.com/api/data' })
   .then(response => {
@@ -103,9 +103,8 @@ load()
 import { ClientBuilder, ApiService } from 'eze-link';
 
 const api = ApiService.create();
-const client = new ClientBuilder({ Api: api ,roots:{
-    json: 'https://jsonplaceholder.typicode.com',
-}});
+const roots={ json: 'https://jsonplaceholder.typicode.com'}
+const client = new ClientBuilder({ api, roots });
 
 client.GET_Cashed({ root: 'json', url: '/posts'}) .then(data => {
     console.log(data)
