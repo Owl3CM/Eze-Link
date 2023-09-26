@@ -297,12 +297,12 @@ export default class ClientBuilder<RootKey extends string> {
       }
     });
 
-  PUT = <Response = any>({ root, url, params, headers, body, onError, onSuccess }: IPost<RootKey>) =>
+  PUT = <Response = any>({ root, url, params, headers, body, getHeaders, onError, onSuccess }: IPost<RootKey>) =>
     new Promise<Response>(async (resolve, reject) => {
       const retry = () => this.PUT({ root, url, params, body });
       try {
         const query = defaultGenerateQuery({ url, params });
-        const res = await this.api.put({ url: query, body, headers });
+        const res = await this.api.put({ url: query, body, headers: headers ?? getHeaders?.(params) });
         onSuccess?.(res);
         resolve(res);
       } catch (error) {
@@ -312,12 +312,12 @@ export default class ClientBuilder<RootKey extends string> {
       }
     });
 
-  UPDATE = <Response = any>({ root, url, params, body, onError, onSuccess }: IPost<RootKey>) =>
+  UPDATE = <Response = any>({ root, url, params, headers, getHeaders, body, onError, onSuccess }: IPost<RootKey>) =>
     new Promise<Response>(async (resolve, reject) => {
       const retry = () => this.UPDATE({ root, url, params, body });
       try {
         const query = defaultGenerateQuery({ url: this.getRoot({ root, url }), params });
-        const res = await this.api.patch({ url: query, body });
+        const res = await this.api.update({ url: query, body, headers: headers ?? getHeaders?.(params) });
         onSuccess?.(res);
         resolve(res);
       } catch (error) {
@@ -326,12 +326,12 @@ export default class ClientBuilder<RootKey extends string> {
         reject(error as IError);
       }
     });
-  PATCH = <Response = any>({ root, url, params, body, onError, onSuccess }: IPost<RootKey>) =>
+  PATCH = <Response = any>({ root, url, params, body, headers, getHeaders, onError, onSuccess }: IPost<RootKey>) =>
     new Promise<Response>(async (resolve, reject) => {
       const retry = () => this.PATCH({ root, url, params, body });
       try {
         const query = defaultGenerateQuery({ url: this.getRoot({ root, url }), params });
-        const res = await this.api.patch({ url: query, body });
+        const res = await this.api.patch({ url: query, body, headers: headers ?? getHeaders?.(params) });
         onSuccess?.(res);
         resolve(res);
       } catch (error) {
@@ -341,12 +341,13 @@ export default class ClientBuilder<RootKey extends string> {
       }
     });
 
-  DELETE = <Response = any>({ root, url, params, onError, onSuccess }: IDelete<RootKey>) =>
+  DELETE = <Response = any>({ root, url, params, body, headers, getHeaders, onError, onSuccess }: IPost<RootKey>) =>
     new Promise<Response>(async (resolve, reject) => {
       const retry = () => this.DELETE({ root, url, params });
       try {
         const query = defaultGenerateQuery({ url: this.getRoot({ root, url }), params });
-        const res = await this.api.delete({ url: query });
+        const res = await this.api.delete({ url: query, body, headers: headers ?? getHeaders?.(params) });
+
         onSuccess?.(res);
         resolve(res);
       } catch (error) {
@@ -447,17 +448,8 @@ type IPost<RootKey> = {
   getHeaders?: (params: any) => any;
   onSuccess?: (res: any) => void;
   onError?: (err: any) => void;
-  getUrl?: (params: any) => string;
 } & AmRoot<RootKey>;
 type ICashed = {
   clearCash?: boolean;
   storageKey?: string;
 };
-type IDelete<RootKey> = {
-  url: string;
-  params?: IQuery;
-  headers?: any;
-  onSuccess?: (res: any) => void;
-  onError?: (err: any) => void;
-  getUrl?: (params: any) => string;
-} & AmRoot<RootKey>;
