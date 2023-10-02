@@ -29,10 +29,15 @@ export const ApiService = {
           Aborts[abortId]!.abort();
         }
         Aborts[abortId] = new AbortController();
+        // check if the body is FormData
+        if (body)
+          if (body instanceof FormData) {
+          } else if (typeof body === "object") body = JSON.stringify(body);
+
         const props = {
           method: method.toUpperCase(),
           headers: { ...headers, ..._headers },
-          body: body ? JSON.stringify(body) : null,
+          body,
           signal: Aborts[abortId]!.signal,
         };
         return new Promise<any>(async (resolve, reject) => {
@@ -42,9 +47,11 @@ export const ApiService = {
             Aborts[abortId] = null;
             if (res.ok) {
               try {
+                console.log({ res });
+
                 const jsonRes = await res?.json();
                 onResponse?.(jsonRes);
-                resolve(jsonRes);
+                resolve(res);
               } catch (er) {
                 resolve({});
               }
@@ -107,81 +114,80 @@ export interface IApiService<Headers = any> {
 
 const getErrorRespoinse = (res: any, props: any) => ({ ...props, ...res, statusMessage: (StatusCodeByMessage as any)[res.status] || "Unknown Error" });
 // export type IApiService<Headers> = typeof ApiService.create<Headers>;
-
 const StatusCodeByMessage = {
   0: "There Is No Response From Server Body Is Empty Connection May Be Very Slow",
 
-  100: " Continue ",
-  101: " Switching protocols ",
-  102: " Processing ",
-  103: " Early Hints ",
+  100: "Continue",
+  101: "Switching protocols",
+  102: "Processing",
+  103: "Early Hints",
 
   //2xx Succesful
-  200: " OK ",
-  201: " Created ",
-  202: " Accepted ",
-  203: " Non-Authoritative Information ",
-  204: " No Content ",
-  205: " Reset Content ",
-  206: " Partial Content ",
-  207: " Multi-Status ",
-  208: " Already Reported ",
-  226: " IM Used ",
+  200: "OK",
+  201: "Created",
+  202: "Accepted",
+  203: "Non-Authoritative Information",
+  204: "No Content",
+  205: "Reset Content",
+  206: "Partial Content",
+  207: "Multi-Status",
+  208: "Already Reported",
+  226: "IM Used",
 
   //3xx Redirection
-  300: " Multiple Choices ",
-  301: " Moved Permanently ",
-  302: " Found (Previously 'Moved Temporarily') ",
-  303: " See Other ",
-  304: " Not Modified ",
-  305: " Use Proxy ",
-  306: " Switch Proxy ",
-  307: " Temporary Redirect ",
-  308: " Permanent Redirect ",
+  300: "Multiple Choices",
+  301: "Moved Permanently",
+  302: "Found (Previously 'Moved Temporarily')",
+  303: "See Other",
+  304: "Not Modified",
+  305: "Use Proxy",
+  306: "Switch Proxy",
+  307: "Temporary Redirect",
+  308: "Permanent Redirect",
 
   //4xx Client Error
-  400: " Bad Request ",
-  401: " Unauthorized ",
-  402: " Payment Required ",
-  403: " Forbidden ",
-  404: " Not Found ",
-  405: " Method Not Allowed ",
-  406: " Not Acceptable ",
-  407: " Proxy Authentication Required ",
-  408: " Request Timeout ",
-  409: " Conflict ",
-  410: " Gone ",
-  411: " Length Required ",
-  412: " Precondition Failed ",
-  413: " Payload Too Large ",
-  414: " URI Too Long ",
-  415: " Unsupported Media Type ",
-  416: " Range Not Satisfiable ",
-  417: " Expectation Failed ",
-  418: " I'm a Teapot ",
-  421: " Misdirected Request ",
-  422: " Unprocessable Entity ",
-  423: " Locked ",
-  424: " Failed Dependency ",
-  425: " Too Early ",
-  426: " Upgrade Required ",
-  428: " Precondition Required ",
-  429: " Too Many Requests ",
-  431: " Request Headers Fields Too Large ",
-  451: " Unavailable For Legal Reasons ",
+  400: "Bad Request",
+  401: "Unauthorized",
+  402: "Payment Required",
+  403: "Forbidden",
+  404: "Not Found",
+  405: "Method Not Allowed",
+  406: "Not Acceptable",
+  407: "Proxy Authentication Required",
+  408: "Request Timeout",
+  409: "Conflict",
+  410: "Gone",
+  411: "Length Required",
+  412: "Precondition Failed",
+  413: "Payload Too Large",
+  414: "URI Too Long",
+  415: "Unsupported Media Type",
+  416: "Range Not Satisfiable",
+  417: "Expectation Failed",
+  418: "I'm a Teapot",
+  421: "Misdirected Request",
+  422: "Unprocessable Entity",
+  423: "Locked",
+  424: "Failed Dependency",
+  425: "Too Early",
+  426: "Upgrade Required",
+  428: "Precondition Required",
+  429: "Too Many Requests",
+  431: "Request Headers Fields Too Large",
+  451: "Unavailable For Legal Reasons",
 
   //5xx Server Error
-  500: " Internal Server Error ",
-  501: " Not Implemented ",
-  502: " Bad Gateway ",
-  503: " Service Unavailable ",
-  504: " Gateway Timeout ",
-  505: " HTTP Version Not Supported ",
-  506: " Variant Also Negotiates ",
-  507: " Insufficient Storage ",
-  508: " Loop Detected ",
-  510: " Not Extended ",
-  511: " Network Authentication Required ",
+  500: "Internal Server Error",
+  501: "Not Implemented",
+  502: "Bad Gateway",
+  503: "Service Unavailable",
+  504: "Gateway Timeout",
+  505: "HTTP Version Not Supported",
+  506: "Variant Also Negotiates",
+  507: "Insufficient Storage",
+  508: "Loop Detected",
+  510: "Not Extended",
+  511: "Network Authentication Required",
 };
 
 export default ApiService;
