@@ -29,11 +29,6 @@ export const ApiService = {
           Aborts[abortId]!.abort();
         }
         Aborts[abortId] = new AbortController();
-        // check if the body is FormData
-        if (body)
-          if (body instanceof FormData) {
-          } else if (typeof body === "object") body = JSON.stringify(body);
-
         const props = {
           method: method.toUpperCase(),
           headers: { ...headers, ..._headers },
