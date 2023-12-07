@@ -26,13 +26,13 @@ export const ApiService = {
         const abortId = `${method}-${url.split("?")[0]}`;
         if (Aborts[abortId]) {
           console.warn("A B O R T E D \n" + abortId + "\n?" + url.split("?")[1]);
-          Aborts[abortId]!.abort();
+          // Aborts[abortId]!.abort();
         }
         Aborts[abortId] = new AbortController();
         const props = {
           method: method.toUpperCase(),
           headers: { ...headers, ..._headers },
-          body,
+          body: body ? JSON.stringify(body) : undefined,
           signal: Aborts[abortId]!.signal,
         };
         return new Promise<any>(async (resolve, reject) => {
@@ -42,20 +42,18 @@ export const ApiService = {
             Aborts[abortId] = null;
             if (res.ok) {
               try {
-                console.log({ res });
-
-                const jsonRes = await res?.json();
-                onResponse?.(jsonRes);
-                resolve(res);
-              } catch (er) {
-                resolve({});
-              }
+                // jsonRes = (await res.blob()) ?? (await res.json());
+                (res as any).data = await res.json();
+              } catch (er) {}
+              onResponse?.(res);
+              resolve(res);
             } else {
               try {
                 (res as any).message = JSON.parse(await res.text());
               } catch (e) {}
               (props as any).url = url;
               let err = getErrorRespoinse(res, props);
+
               if (onError) err = onError(err);
               if (err) reject(err);
             }
@@ -70,6 +68,7 @@ export const ApiService = {
     return _apiService as IApiService<Headers>;
   },
 };
+const getErrorRespoinse = (response: any, props: any) => ({ props, response, statusMessage: (StatusCodeByMessage as any)[response.status] || "Unknown Error" });
 
 interface CreateApiProps<Headers = any> {
   headers?: Headers;
@@ -107,7 +106,6 @@ export interface IApiService<Headers = any> {
   setOnRequest: (onRequest: OnRequest<Headers>) => void;
 }
 
-const getErrorRespoinse = (res: any, props: any) => ({ ...props, ...res, statusMessage: (StatusCodeByMessage as any)[res.status] || "Unknown Error" });
 // export type IApiService<Headers> = typeof ApiService.create<Headers>;
 const StatusCodeByMessage = {
   0: "There Is No Response From Server Body Is Empty Connection May Be Very Slow",
