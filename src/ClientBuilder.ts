@@ -312,7 +312,7 @@ export default class ClientBuilder<RootKey extends string> {
       loadMore: () =>
         new Promise(async (resolve, reject) => {
           try {
-            const _url = query + `&IdLt=${lastId}`;
+            const _url = query + `&IdGt=${lastId}`;
             const { data } = await this.api.get({ url: _url, headers });
             if (data.length) lastId = data[data.length - 1].id;
             this.storable.insert(_storeKey, data);
@@ -359,7 +359,7 @@ export default class ClientBuilder<RootKey extends string> {
       loadMore: () =>
         new Promise(async (resolve, reject) => {
           try {
-            const _url = query + `&IdLt=${lastId}`;
+            const _url = query + `&IdGt=${lastId}`;
             const { data } = await this.api.get({ url: _url, headers });
             if (data.length) lastId = data[data.length - 1].id;
             resolve(data as Response[]);
