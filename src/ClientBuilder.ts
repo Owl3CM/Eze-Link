@@ -288,6 +288,7 @@ export default class ClientBuilder<RootKey extends string> {
 
     const _BuildUrl = getUrl ? (params?: T) => this.getRoot({ root, url: getUrl!(params) }) : () => this.getRoot({ root, url });
 
+    let idDirection = "IdGt";
     const loadsFuctions = {
       load: (params?: T, clearCash?: boolean) =>
         new Promise<Response>(async (resolve, reject) => {
@@ -295,6 +296,8 @@ export default class ClientBuilder<RootKey extends string> {
           try {
             headers = getHeaders?.(params);
             query = this.generateQuery({ url: _BuildUrl(params), params: { limit: this.limit, ...params } });
+            idDirection = query.split("sort")[1]?.split("&")[0].includes("-id") ? "IdLt" : "IdGt";
+
             _storeKey = storageKey + query;
             const _url = query;
             let stored = clearCash ? null : this.storable.get(_storeKey);
@@ -312,7 +315,7 @@ export default class ClientBuilder<RootKey extends string> {
       loadMore: () =>
         new Promise(async (resolve, reject) => {
           try {
-            const _url = query + `&IdGt=${lastId}`;
+            const _url = query + `&${idDirection}=${lastId}`;
             const { data } = await this.api.get({ url: _url, headers });
             if (data.length) lastId = data[data.length - 1].id;
             this.storable.insert(_storeKey, data);
@@ -340,14 +343,18 @@ export default class ClientBuilder<RootKey extends string> {
 
     const _BuildUrl = getUrl ? (params?: T) => this.getRoot({ root, url: getUrl!(params) }) : () => this.getRoot({ root, url });
 
+    let idDirection = "IdGt";
     const loadsFuctions = {
       load: (params?: T) =>
         new Promise<Response>(async (resolve, reject) => {
           lastId = "";
           try {
             headers = getHeaders?.(params);
+
             query = this.generateQuery({ url: _BuildUrl(params), params: { limit: this.limit, ...params } });
             const _url = query;
+            idDirection = query.split("sort")[1]?.split("&")[0].includes("-id") ? "IdLt" : "IdGt";
+
             const { data } = await this.api.get({ url: _url, headers });
             if (data.length > 0) lastId = data[data.length - 1].id;
             resolve(data as Response);
@@ -359,7 +366,7 @@ export default class ClientBuilder<RootKey extends string> {
       loadMore: () =>
         new Promise(async (resolve, reject) => {
           try {
-            const _url = query + `&IdGt=${lastId}`;
+            const _url = query + `&${idDirection}=${lastId}`;
             const { data } = await this.api.get({ url: _url, headers });
             if (data.length) lastId = data[data.length - 1].id;
             resolve(data as Response[]);
