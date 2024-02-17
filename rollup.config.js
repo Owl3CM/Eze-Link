@@ -6,7 +6,7 @@ import { terser } from "rollup-plugin-terser";
 import packageJson from "./package.json";
 
 const config = {
-  input: "src/index.ts",
+  input: "lib/index.ts",
   plugins: [peerDepsExternal(), resolve(), commonjs(), typescript(), terser()],
   output: {
     file: packageJson.main,

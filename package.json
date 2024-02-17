@@ -1,6 +1,6 @@
 {
   "name": "eze-link",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "Eze-Link",
   "main": "dist/index.js",
   "source": "src/index.ts",
@@ -36,12 +36,17 @@
       "react-app"
     ]
   },
-  "keywords": [],
-  "tags": [],
-  "dependencies": {
-    "morabaa-services": "^1.0.81",
-    "node-fetch": "^3.3.2"
-  },
+  "keywords": [
+    "eze-link",
+    "axios",
+    "react",
+    "react-native",
+    "react-query",
+    "react-query-devtools"
+  ],
+  "tags": [
+    "eze-link"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/Owl3CM/Eze-Link.git"

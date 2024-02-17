@@ -21,11 +21,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react",
-    "useDefineForClassFields": true,
-    "baseUrl": "./src",
-    "paths": {
-      "@/*": ["./*"]
-    }
+    "useDefineForClassFields": true
   },
-  "include": ["src"]
+  "include": ["lib"]
 }
