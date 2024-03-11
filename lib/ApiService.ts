@@ -31,10 +31,16 @@ export const ApiService = {
         Aborts[abortId] = new AbortController();
         const props = {
           method: method.toUpperCase(),
-          headers: { ...headers, ..._headers },
+          headers: {
+            "Content-Type": "application/json",
+            ...headers,
+            ..._headers,
+          },
           body: body ? JSON.stringify(body) : undefined,
           signal: Aborts[abortId]!.signal,
         };
+        console.log(props);
+
         return new Promise<any>(async (resolve, reject) => {
           try {
             await onRequest?.(props as OnRequestProps<Headers>);
