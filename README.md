@@ -60,7 +60,7 @@ const roots = { json: "https://jsonplaceholder.typicode.com" };
 const api = ApiService.create({});
 const client = new ClientBuilder({ roots, api, storage: "localStorage", storeKey: "test-storeKey" });
 
-const { load, loadMore, reload } = client.Offset_Load({
+const { load, loadMore, reload } = client.OffsetPaginator({
   root: "json",
   url: "/posts",
   getHeaders: (params) => {
@@ -106,7 +106,7 @@ const api = ApiService.create();
 const roots={ json: 'https://jsonplaceholder.typicode.com'}
 const client = new ClientBuilder({ api, roots });
 
-client.GET_Cashed({ root: 'json', url: '/posts'}) .then(data => {
+client.GET_WithCash({ root: 'json', url: '/posts'}) .then(data => {
     console.log(data)
       // Handle the data here
   })

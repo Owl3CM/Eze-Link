@@ -39,7 +39,6 @@ export const ApiService = {
           body: body ? JSON.stringify(body) : undefined,
           signal: Aborts[abortId]!.signal,
         };
-        console.log(props);
 
         return new Promise<any>(async (resolve, reject) => {
           try {
