@@ -43,8 +43,14 @@ export default class ClientBuilder<RootKey extends string> {
     if (limit) this.limit = limit;
   }
 
-  // OffsetPaginatorWithCash = <T = IQuery, Response = any[]>({ root, url, getUrl, getHeaders, storageKey = "" }: CreateCashedLoadCleintProps<T, RootKey>) => {
-  OffsetPaginatorWithCash = <T = IQuery, Response = any[]>({ root, url, getUrl, getHeaders, storageKey = "" }: CreateCashedLoadCleintProps<T, RootKey>) => {
+  OffsetPaginatorWithCash = <T = IQuery, Response = any[]>({
+    root,
+    url,
+    getUrl,
+    getHeaders,
+    limit = this.limit,
+    storageKey = "",
+  }: CreateCashedLoadCleintProps<T, RootKey>) => {
     let offset = 0;
     let queryUrl = "";
     let headers: any = null;
@@ -52,41 +58,49 @@ export default class ClientBuilder<RootKey extends string> {
 
     const _BuildUrl = getUrl ? (query?: T) => this.getRoot({ root, url: getUrl!(query) }) : () => this.getRoot({ root, url });
 
-    const loadsFuctions = {
+    const loadsFunctions = {
+      hasMore: false,
+      limit,
       load: (query?: T, clearCash?: boolean) =>
         new Promise<Response>(async (resolve, reject) => {
           offset = 0;
           try {
             headers = getHeaders?.(query);
-            queryUrl = this.generateQuery({ url: _BuildUrl(query), query: { limit: this.limit, ...query } });
+            queryUrl = this.generateQuery({ url: _BuildUrl(query), query: { limit: loadsFunctions.limit, ...query } });
             _storeKey = storageKey + queryUrl;
-            const _url = queryUrl + `&offset=${offset}`;
+            const _url = queryUrl;
             let stored = clearCash ? null : this.storable.get(_storeKey);
             if (!stored) {
               stored = (await this.api.get({ url: _url, headers })).data;
+              loadsFunctions.hasMore = stored.length >= loadsFunctions.limit;
+
               this.storable.set(_storeKey, stored);
+            } else {
+              loadsFunctions.hasMore = true;
             }
+            // await new Promise((res) => setTimeout(res, 100));
             offset += stored.length;
             resolve(stored as Response);
           } catch (err: any) {
-            err.retry = () => loadsFuctions.load(query, clearCash);
+            err.retry = () => loadsFunctions.load(query, clearCash);
             reject(err);
           }
         }),
       loadMore: () =>
-        new Promise(async (resolve, reject) => {
+        new Promise<Response>(async (resolve, reject) => {
           try {
             const _url = queryUrl + `&offset=${offset}`;
             const { data } = await this.api.get({ url: _url, headers });
             offset += data.length;
+            loadsFunctions.hasMore = data.length >= loadsFunctions.limit;
             this.storable.insert(_storeKey, data);
-            resolve(data as Response[]);
+            resolve(data);
           } catch (err: any) {
-            err.retry = () => loadsFuctions.loadMore();
+            err.retry = () => loadsFunctions.loadMore();
             reject(err);
           }
         }),
-      reload: async (query: T) => await loadsFuctions.load(query, true),
+      reload: (query?: T) => loadsFunctions.load(query, true),
       // insert: (data: Response[]) => {
       //     offset += data.length;
       //     this.storage.insert(_storeKey, data);
@@ -97,49 +111,60 @@ export default class ClientBuilder<RootKey extends string> {
       //     this.storage.set(_storeKey, _data);
       // },
     };
-    return loadsFuctions;
+    return loadsFunctions;
   };
-  OffsetPaginator = <T = IQuery, Response = any[]>({ root, url, getUrl, getHeaders }: CreateLoadCleintProps<T, RootKey>) => {
+  OffsetPaginator = <T = IQuery, Response = any[]>({ root, url, getUrl, getHeaders, limit = this.limit }: CreateLoadCleintProps<T, RootKey>) => {
     let offset = 0;
     let queryUrl = "";
     let headers: any = null;
 
     const _BuildUrl = getUrl ? (query?: T) => this.getRoot({ root, url: getUrl!(query) }) : () => this.getRoot({ root, url });
 
-    const loadsFuctions = {
+    const loadsFunctions = {
+      hasMore: false,
+      limit,
       load: (query?: T) =>
         new Promise<Response>(async (resolve, reject) => {
           offset = 0;
           try {
             headers = getHeaders?.(query);
-            queryUrl = this.generateQuery({ url: _BuildUrl(query), query: { limit: this.limit, ...query } });
-            const _url = queryUrl + `&offset=${offset}`;
+            queryUrl = this.generateQuery({ url: _BuildUrl(query), query: { limit: loadsFunctions.limit, ...query } });
+            const _url = queryUrl;
             const { data } = await this.api.get({ url: _url, headers });
             offset += data.length;
+            loadsFunctions.hasMore = data.length >= loadsFunctions.limit;
             resolve(data as Response);
           } catch (err: any) {
-            err.retry = () => loadsFuctions.load(query);
+            err.retry = () => loadsFunctions.load(query);
             reject(err);
           }
         }),
       loadMore: () =>
-        new Promise(async (resolve, reject) => {
+        new Promise<Response>(async (resolve, reject) => {
           try {
             const _url = queryUrl + `&offset=${offset}`;
             const { data } = await this.api.get({ url: _url, headers });
             offset += data.length;
-            resolve(data as Response[]);
+            loadsFunctions.hasMore = data.length >= loadsFunctions.limit;
+            resolve(data);
           } catch (err: any) {
-            err.retry = () => loadsFuctions.loadMore();
+            err.retry = () => loadsFunctions.loadMore();
             reject(err);
           }
         }),
-      reload: async (query?: T) => await loadsFuctions.load(query),
+      reload: (query?: T) => loadsFunctions.load(query),
     };
-    return loadsFuctions;
+    return loadsFunctions;
   };
 
-  PaginatorWithCash = <T = IQuery, Response = any[]>({ root, url, getUrl, getHeaders, storageKey = "" }: CreateCashedLoadCleintProps<T, RootKey>) => {
+  PaginatorWithCash = <T = IQuery, Response = any[]>({
+    root,
+    url,
+    getUrl,
+    getHeaders,
+    limit = this.limit,
+    storageKey = "",
+  }: CreateCashedLoadCleintProps<T, RootKey>) => {
     let page = 0;
     let queryUrl = "";
     let headers: any = null;
@@ -147,41 +172,46 @@ export default class ClientBuilder<RootKey extends string> {
 
     const _BuildUrl = getUrl ? (query?: T) => this.getRoot({ root, url: getUrl!(query) }) : () => this.getRoot({ root, url });
 
-    const loadsFuctions = {
+    const loadsFunctions = {
+      hasMore: false,
+      limit,
       load: (query?: T, clearCash?: boolean) =>
         new Promise<Response>(async (resolve, reject) => {
           page = 0;
           try {
             headers = getHeaders?.(query);
-            queryUrl = this.generateQuery({ url: _BuildUrl(query), query: { limit: this.limit, ...query } });
+            queryUrl = this.generateQuery({ url: _BuildUrl(query), query: { limit: loadsFunctions.limit, ...query } });
             _storeKey = storageKey + queryUrl;
-            const _url = queryUrl + `&page=${page}`;
+            const _url = queryUrl;
             let stored = clearCash ? null : this.storable.get(_storeKey);
             if (!stored) {
               stored = (await this.api.get({ url: _url, headers })).data;
+              loadsFunctions.hasMore = stored.length >= loadsFunctions.limit;
+
               this.storable.set(_storeKey, stored);
             }
             page++;
             resolve(stored as Response);
           } catch (err: any) {
-            err.retry = () => loadsFuctions.load(query, clearCash);
+            err.retry = () => loadsFunctions.load(query, clearCash);
             reject(err);
           }
         }),
       loadMore: () =>
-        new Promise(async (resolve, reject) => {
+        new Promise<Response>(async (resolve, reject) => {
           try {
             const _url = queryUrl + `&page=${page}`;
             const { data } = await this.api.get({ url: _url, headers });
             page++;
+            loadsFunctions.hasMore = data.length >= loadsFunctions.limit;
             this.storable.insert(_storeKey, data);
-            resolve(data as Response[]);
+            resolve(data);
           } catch (err: any) {
-            err.retry = () => loadsFuctions.loadMore();
+            err.retry = () => loadsFunctions.loadMore();
             reject(err);
           }
         }),
-      reload: async (query?: T) => await loadsFuctions.load(query, true),
+      reload: (query?: T) => loadsFunctions.load(query, true),
       // insert: (data: Response[]) => {
       //     this.storage.insert(_storeKey, data);
       // },
@@ -189,49 +219,60 @@ export default class ClientBuilder<RootKey extends string> {
       //     const _data = this.storage.get(_storeKey);
       //     _data.push(...data);
     };
-    return loadsFuctions;
+    return loadsFunctions;
   };
-  Paginator = <T = IQuery, Response = any[]>({ root, url, getUrl, getHeaders }: CreateLoadCleintProps<T, RootKey>) => {
+  Paginator = <T = IQuery, Response = any[]>({ root, url, getUrl, getHeaders, limit = this.limit }: CreateLoadCleintProps<T, RootKey>) => {
     let page = 0;
     let queryUrl = "";
     let headers: any = null;
 
     const _BuildUrl = getUrl ? (query?: T) => this.getRoot({ root, url: getUrl!(query) }) : () => this.getRoot({ root, url });
 
-    const loadsFuctions = {
+    const loadsFunctions = {
+      hasMore: false,
+      limit,
       load: (query?: T) =>
         new Promise<Response>(async (resolve, reject) => {
           page = 0;
           try {
             headers = getHeaders?.(query);
-            queryUrl = this.generateQuery({ url: _BuildUrl(query), query: { limit: this.limit, ...query } });
-            const _url = queryUrl + `&page=${page}`;
+            queryUrl = this.generateQuery({ url: _BuildUrl(query), query: { limit: loadsFunctions.limit, ...query } });
+            const _url = queryUrl;
             const { data } = await this.api.get({ url: _url, headers });
             page++;
+            loadsFunctions.hasMore = data.length >= loadsFunctions.limit;
             resolve(data as Response);
           } catch (err: any) {
-            err.retry = () => loadsFuctions.load(query);
+            err.retry = () => loadsFunctions.load(query);
             reject(err);
           }
         }),
       loadMore: () =>
-        new Promise(async (resolve, reject) => {
+        new Promise<Response>(async (resolve, reject) => {
           try {
             const _url = queryUrl + `&page=${page}`;
             const { data } = await this.api.get({ url: _url, headers });
             page++;
-            resolve(data as Response[]);
+            loadsFunctions.hasMore = data.length >= loadsFunctions.limit;
+            resolve(data);
           } catch (err: any) {
-            err.retry = () => loadsFuctions.loadMore();
+            err.retry = () => loadsFunctions.loadMore();
             reject(err);
           }
         }),
-      reload: async (query?: T) => await loadsFuctions.load(query),
+      reload: (query?: T) => loadsFunctions.load(query),
     };
-    return loadsFuctions;
+    return loadsFunctions;
   };
 
-  IdPaginatorWithCash = <T = IQuery, Response = any[]>({ root, url, getUrl, getHeaders, storageKey = "" }: CreateCashedLoadCleintProps<T, RootKey>) => {
+  IdPaginatorWithCash = <T = IQuery, Response = any[]>({
+    root,
+    url,
+    getUrl,
+    getHeaders,
+    limit = this.limit,
+    storageKey = "",
+  }: CreateCashedLoadCleintProps<T, RootKey>) => {
     let lastId = "";
     let queryUrl = "";
     let headers: any = null;
@@ -240,13 +281,15 @@ export default class ClientBuilder<RootKey extends string> {
     const _BuildUrl = getUrl ? (query?: T) => this.getRoot({ root, url: getUrl!(query) }) : () => this.getRoot({ root, url });
 
     let idDirection = "IdGt";
-    const loadsFuctions = {
+    const loadsFunctions = {
+      hasMore: false,
+      limit,
       load: (query?: T, clearCash?: boolean) =>
         new Promise<Response>(async (resolve, reject) => {
           lastId = "";
           try {
             headers = getHeaders?.(query);
-            queryUrl = this.generateQuery({ url: _BuildUrl(query), query: { limit: this.limit, ...query } });
+            queryUrl = this.generateQuery({ url: _BuildUrl(query), query: { limit: loadsFunctions.limit, ...query } });
             idDirection = queryUrl.split("sort")[1]?.split("&")[0].includes("-id") ? "IdLt" : "IdGt";
 
             _storeKey = storageKey + queryUrl;
@@ -259,24 +302,25 @@ export default class ClientBuilder<RootKey extends string> {
             if (stored.length > 0) lastId = stored[stored.length - 1].id;
             resolve(stored as Response);
           } catch (err: any) {
-            err.retry = () => loadsFuctions.load(query, clearCash);
+            err.retry = () => loadsFunctions.load(query, clearCash);
             reject(err);
           }
         }),
       loadMore: () =>
-        new Promise(async (resolve, reject) => {
+        new Promise<Response>(async (resolve, reject) => {
           try {
             const _url = queryUrl + `&${idDirection}=${lastId}`;
             const { data } = await this.api.get({ url: _url, headers });
             if (data.length) lastId = data[data.length - 1].id;
+            loadsFunctions.hasMore = data.length >= loadsFunctions.limit;
             this.storable.insert(_storeKey, data);
-            resolve(data as Response[]);
+            resolve(data);
           } catch (err: any) {
-            err.retry = () => loadsFuctions.loadMore();
+            err.retry = () => loadsFunctions.loadMore();
             reject(err);
           }
         }),
-      reload: async (query: T) => await loadsFuctions.load(query, true),
+      reload: (query?: T) => loadsFunctions.load(query, true),
       // insert: (data: Response[]) => {
       //     this.storage.insert(_storeKey, data);
       // },
@@ -284,10 +328,10 @@ export default class ClientBuilder<RootKey extends string> {
       //     const _data = this.storage.get(_storeKey);
       //     _data.push(...data);
     };
-    return loadsFuctions;
+    return loadsFunctions;
   };
 
-  IdPaginator = <T = IQuery, Response = any[]>({ root, url, getUrl, getHeaders }: CreateLoadCleintProps<T, RootKey>) => {
+  IdPaginator = <T = IQuery, Response = any[]>({ root, url, getUrl, getHeaders, limit = this.limit }: CreateLoadCleintProps<T, RootKey>) => {
     let lastId = "";
     let queryUrl = "";
     let headers: any = null;
@@ -295,40 +339,44 @@ export default class ClientBuilder<RootKey extends string> {
     const _BuildUrl = getUrl ? (query?: T) => this.getRoot({ root, url: getUrl!(query) }) : () => this.getRoot({ root, url });
 
     let idDirection = "IdGt";
-    const loadsFuctions = {
+    const loadsFunctions = {
+      hasMore: false,
+      limit,
       load: (query?: T) =>
         new Promise<Response>(async (resolve, reject) => {
           lastId = "";
           try {
             headers = getHeaders?.(query);
 
-            queryUrl = this.generateQuery({ url: _BuildUrl(query), query: { limit: this.limit, ...query } });
+            queryUrl = this.generateQuery({ url: _BuildUrl(query), query: { limit: loadsFunctions.limit, ...query } });
             const _url = queryUrl;
             idDirection = queryUrl.split("sort")[1]?.split("&")[0].includes("-id") ? "IdLt" : "IdGt";
 
             const { data } = await this.api.get({ url: _url, headers });
             if (data.length > 0) lastId = data[data.length - 1].id;
+            loadsFunctions.hasMore = data.length >= loadsFunctions.limit;
             resolve(data as Response);
           } catch (err: any) {
-            err.retry = () => loadsFuctions.load(query);
+            err.retry = () => loadsFunctions.load(query);
             reject(err);
           }
         }),
       loadMore: () =>
-        new Promise(async (resolve, reject) => {
+        new Promise<Response>(async (resolve, reject) => {
           try {
             const _url = queryUrl + `&${idDirection}=${lastId}`;
             const { data } = await this.api.get({ url: _url, headers });
             if (data.length) lastId = data[data.length - 1].id;
-            resolve(data as Response[]);
+            loadsFunctions.hasMore = data.length >= loadsFunctions.limit;
+            resolve(data);
           } catch (err: any) {
-            err.retry = () => loadsFuctions.loadMore();
+            err.retry = () => loadsFunctions.loadMore();
             reject(err);
           }
         }),
-      reload: async (query: T) => await loadsFuctions.load(query),
+      reload: (query?: T) => loadsFunctions.load(query),
     };
-    return loadsFuctions;
+    return loadsFunctions;
   };
 
   GET = <Response = any>({ root, url, query, headers }: IGet<RootKey>) =>
@@ -481,11 +529,11 @@ type IQuery = { [key: string]: any };
 
 type CreateLoadCleintProps<T, RootKey> = ({ url: string; getUrl?: null } | { url?: null; getUrl: (query?: T) => string }) & {
   getHeaders?: (query?: T) => any;
+  limit?: number;
 } & AmRoot<RootKey>;
-type CreateCashedLoadCleintProps<T, RootKey> = ({ url: string; getUrl?: null } | { url?: null; getUrl: (query?: T) => string }) & {
-  getHeaders?: (query?: T) => any;
+type CreateCashedLoadCleintProps<T, RootKey> = CreateLoadCleintProps<T, RootKey> & {
   storageKey?: string;
-} & AmRoot<RootKey>;
+};
 
 type IClientFunctionsConstructor =
   | {

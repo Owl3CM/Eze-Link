@@ -26,7 +26,7 @@ export const ApiService = {
         const abortId = `${method}-${url.split("?")[0]}`;
         if (Aborts[abortId]) {
           console.warn("A B O R T E D \n" + abortId + "\n?" + url.split("?")[1]);
-          // Aborts[abortId]!.abort();
+          Aborts[abortId]!.abort();
         }
         Aborts[abortId] = new AbortController();
         const props = {
