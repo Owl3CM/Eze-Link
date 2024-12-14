@@ -1,6 +1,6 @@
 {
   "name": "eze-link",
-  "version": "0.0.16",
+  "version": "0.1.2",
   "description": "Eze-Link",
   "main": "dist/index.js",
   "source": "src/index.ts",

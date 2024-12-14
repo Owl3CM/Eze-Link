@@ -35,7 +35,7 @@ export default class ClientBuilder<RootKey extends string> {
       this.GET_WithCash = this.GET;
       this.POST_WithCash = this.POST;
       this.PaginatorWithCash = this.Paginator;
-      this.OffsetPaginatorWithCash = this.OffsetPaginator;
+      this.OffsetPaginatorWithCash = this.OffsetPaginator as any;
       this.IdPaginatorWithCash = this.IdPaginator;
     }
     this.api = api;
@@ -94,7 +94,7 @@ export default class ClientBuilder<RootKey extends string> {
             offset += data.length;
             loadsFunctions.hasMore = data.length >= loadsFunctions.limit;
             this.storable.insert(_storeKey, data);
-            resolve(data);
+            resolve(data as Response);
           } catch (err: any) {
             err.retry = () => loadsFunctions.loadMore();
             reject(err);
@@ -131,8 +131,9 @@ export default class ClientBuilder<RootKey extends string> {
             queryUrl = this.generateQuery({ url: _BuildUrl(query), query: { limit: loadsFunctions.limit, ...query } });
             const _url = queryUrl;
             const { data } = await this.api.get({ url: _url, headers });
-            offset += data.length;
-            loadsFunctions.hasMore = data.length >= loadsFunctions.limit;
+            const items = (Array.isArray(data) ? data : Object.values(data).find((v) => Array.isArray(v))) as any[];
+            offset += items.length;
+            loadsFunctions.hasMore = items.length >= loadsFunctions.limit;
             resolve(data as Response);
           } catch (err: any) {
             err.retry = () => loadsFunctions.load(query);
@@ -299,7 +300,9 @@ export default class ClientBuilder<RootKey extends string> {
               stored = (await this.api.get({ url: _url, headers })).data;
               this.storable.set(_storeKey, stored);
             }
-            if (stored.length > 0) lastId = stored[stored.length - 1].id;
+            const items = (Array.isArray(stored) ? stored : Object.values(stored).find((v) => Array.isArray(v))) as any[];
+            if (items.length > 0) lastId = items[items.length - 1].id;
+            loadsFunctions.hasMore = items.length >= loadsFunctions.limit;
             resolve(stored as Response);
           } catch (err: any) {
             err.retry = () => loadsFunctions.load(query, clearCash);
@@ -309,10 +312,12 @@ export default class ClientBuilder<RootKey extends string> {
       loadMore: () =>
         new Promise<Response>(async (resolve, reject) => {
           try {
-            const _url = queryUrl + `&${idDirection}=${lastId}`;
+            // const _url = queryUrl + `&${idDirection}=${lastId}`;
+            const _url = queryUrl + `&last_id=${lastId}`;
             const { data } = await this.api.get({ url: _url, headers });
-            if (data.length) lastId = data[data.length - 1].id;
-            loadsFunctions.hasMore = data.length >= loadsFunctions.limit;
+            const items = (Array.isArray(data) ? data : Object.values(data).find((v) => Array.isArray(v))) as any[];
+            if (items.length) lastId = items[items.length - 1].id;
+            loadsFunctions.hasMore = items.length >= loadsFunctions.limit;
             this.storable.insert(_storeKey, data);
             resolve(data);
           } catch (err: any) {
@@ -353,8 +358,9 @@ export default class ClientBuilder<RootKey extends string> {
             idDirection = queryUrl.split("sort")[1]?.split("&")[0].includes("-id") ? "IdLt" : "IdGt";
 
             const { data } = await this.api.get({ url: _url, headers });
-            if (data.length > 0) lastId = data[data.length - 1].id;
-            loadsFunctions.hasMore = data.length >= loadsFunctions.limit;
+            const items = (Array.isArray(data) ? data : Object.values(data).find((v) => Array.isArray(v))) as any[];
+            if (items.length > 0) lastId = items[items.length - 1].id;
+            loadsFunctions.hasMore = items.length >= loadsFunctions.limit;
             resolve(data as Response);
           } catch (err: any) {
             err.retry = () => loadsFunctions.load(query);
@@ -364,10 +370,12 @@ export default class ClientBuilder<RootKey extends string> {
       loadMore: () =>
         new Promise<Response>(async (resolve, reject) => {
           try {
-            const _url = queryUrl + `&${idDirection}=${lastId}`;
+            // const _url = queryUrl + `&${idDirection}=${lastId}`;
+            const _url = queryUrl + `&last_id=${lastId}`;
             const { data } = await this.api.get({ url: _url, headers });
-            if (data.length) lastId = data[data.length - 1].id;
-            loadsFunctions.hasMore = data.length >= loadsFunctions.limit;
+            const items = (Array.isArray(data) ? data : Object.values(data).find((v) => Array.isArray(v))) as any[];
+            if (items.length) lastId = items[items.length - 1].id;
+            loadsFunctions.hasMore = items.length >= loadsFunctions.limit;
             resolve(data);
           } catch (err: any) {
             err.retry = () => loadsFunctions.loadMore();
@@ -511,6 +519,7 @@ export default class ClientBuilder<RootKey extends string> {
 const defaultGenerateQuery = ({ url, query }: GenerateQuery) => {
   if (!query) return url;
   let queryUrl = `${url}?`;
+  if (typeof query.query === "object") query = query.query;
   new URLSearchParams(query).forEach((value, key) => {
     if (hasValue(value)) queryUrl += `${key}=${value}&`;
   });
@@ -518,7 +527,7 @@ const defaultGenerateQuery = ({ url, query }: GenerateQuery) => {
   return queryUrl;
 };
 
-const hasValue = (value: any) => ![undefined, "undefined", "null", "", "none"].includes(value);
+const hasValue = (value: any) => ![undefined, "undefined", "null", "", "none", "NaN"].includes(value);
 
 type GenerateQuery = {
   url: string;
