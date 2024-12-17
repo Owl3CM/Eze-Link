@@ -91,7 +91,6 @@ export default class ClientBuilder<RootKey extends string> {
           try {
             const _url = queryUrl + `&offset=${offset}`;
             const { data } = await this.api.get({ url: _url, headers });
-            console.log({ _url, data, from: "ClientBuilder.ts 94" });
             offset += data.data.length;
             loadsFunctions.hasMore = data.length >= loadsFunctions.limit;
             this.storable.insert(_storeKey, data);
