@@ -91,7 +91,8 @@ export default class ClientBuilder<RootKey extends string> {
           try {
             const _url = queryUrl + `&offset=${offset}`;
             const { data } = await this.api.get({ url: _url, headers });
-            offset += data.length;
+            console.log({ _url, data, from: "ClientBuilder.ts 94" });
+            offset += data.data.length;
             loadsFunctions.hasMore = data.length >= loadsFunctions.limit;
             this.storable.insert(_storeKey, data);
             resolve(data as Response);
@@ -145,8 +146,9 @@ export default class ClientBuilder<RootKey extends string> {
           try {
             const _url = queryUrl + `&offset=${offset}`;
             const { data } = await this.api.get({ url: _url, headers });
-            offset += data.length;
-            loadsFunctions.hasMore = data.length >= loadsFunctions.limit;
+            const items = (Array.isArray(data) ? data : Object.values(data).find((v) => Array.isArray(v))) as any[];
+            offset += items.length;
+            loadsFunctions.hasMore = items.length >= loadsFunctions.limit;
             resolve(data);
           } catch (err: any) {
             err.retry = () => loadsFunctions.loadMore();
