@@ -43,6 +43,34 @@ export default class ClientBuilder<RootKey extends string> {
     if (limit) this.limit = limit;
   }
 
+  GET_Blob = ({ root, url, query, headers }: IGet<RootKey>) =>
+    new Promise<Blob>(async (resolve, reject) => {
+      const retry = () => this.GET_Blob({ root, url, query, headers });
+      try {
+        const queryUrl = defaultGenerateQuery({ url: this.getRoot({ root, url }), query });
+        const blob = await this.api.getBlob({ url: queryUrl, headers });
+        resolve(blob);
+      } catch (error) {
+        const _err = error as IError;
+        _err.retry = retry;
+        reject(_err);
+      }
+    });
+
+  POST_Blob = ({ root, url, query, headers, body }: IPost<RootKey>) =>
+    new Promise<Blob>(async (resolve, reject) => {
+      const retry = () => this.POST_Blob({ root, url, query, headers, body });
+      try {
+        const queryUrl = defaultGenerateQuery({ url: this.getRoot({ root, url }), query });
+        const res = await this.api.postBlob({ url: queryUrl, body, headers });
+        resolve(res);
+      } catch (error) {
+        const _err = error as IError;
+        _err.retry = retry;
+        reject(_err);
+      }
+    });
+
   OffsetPaginatorWithCash = <T = IQuery, Response = any[]>({
     root,
     url,
@@ -101,6 +129,18 @@ export default class ClientBuilder<RootKey extends string> {
           }
         }),
       reload: (query?: T) => loadsFunctions.load(query, true),
+      loadAll: async (query?: T) =>
+        new Promise<Response>(async (resolve, reject) => {
+          try {
+            headers = getHeaders?.(query);
+            const url = this.generateQuery({ url: _BuildUrl(query), query: { ...query, limit: null } });
+            const { data } = await this.api.get({ url, headers });
+            resolve(data as Response);
+          } catch (err: any) {
+            err.retry = () => loadsFunctions.loadAll(query);
+            reject(err);
+          }
+        }),
       // insert: (data: Response[]) => {
       //     offset += data.length;
       //     this.storage.insert(_storeKey, data);
@@ -154,6 +194,18 @@ export default class ClientBuilder<RootKey extends string> {
           }
         }),
       reload: (query?: T) => loadsFunctions.load(query),
+      loadAll: async (query?: T) =>
+        new Promise<Response>(async (resolve, reject) => {
+          try {
+            headers = getHeaders?.(query);
+            const url = this.generateQuery({ url: _BuildUrl(query), query: { ...query, limit: null } });
+            const { data } = await this.api.get({ url, headers });
+            resolve(data as Response);
+          } catch (err: any) {
+            err.retry = () => loadsFunctions.loadAll(query);
+            reject(err);
+          }
+        }),
     };
     return loadsFunctions;
   };

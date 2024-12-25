@@ -7,6 +7,8 @@ export const ApiService = {
       put: createMethod("put"),
       patch: createMethod("patch"),
       update: createMethod("update"),
+      getBlob: createBlobMethod("get"),
+      postBlob: createBlobMethod("post"),
       setHeader: (newHeaders: Headers | ((headers: Headers) => Headers)) => {
         headers = typeof newHeaders === "function" ? (newHeaders as any)(headers) : newHeaders;
       },
@@ -70,6 +72,60 @@ export const ApiService = {
         });
       };
     }
+    function createBlobMethod(method: string) {
+      return ({ url, body, headers: _headers }: IMethod<Headers>) => {
+        const abortId = `${method}-${url.split("?")[0]}`;
+        if (Aborts[abortId]) {
+          console.warn("A B O R T E D \n" + abortId + "\n?" + url.split("?")[1]);
+          Aborts[abortId]!.abort();
+        }
+        Aborts[abortId] = new AbortController();
+        const props = {
+          method: method.toUpperCase(),
+          headers: {
+            "Content-Type": "application/json",
+            ...headers,
+            ..._headers,
+          },
+          body: body ? JSON.stringify(body) : undefined,
+          signal: Aborts[abortId]!.signal,
+        };
+
+        return new Promise<Blob>(async (resolve, reject) => {
+          try {
+            // Execute onRequest hook if defined
+            await onRequest?.(props as OnRequestProps<Headers>);
+
+            // Perform fetch call
+            const res = await fetch(url, props as RequestInit);
+
+            // Reset abort controller
+            Aborts[abortId] = null;
+
+            // Handle response
+            if (res.ok) {
+              const blob = await res.blob(); // Parse response as Blob
+              onResponse?.(res);
+              resolve(blob);
+            } else {
+              try {
+                (res as any).message = JSON.parse(await res.text());
+              } catch (e) {}
+              (props as any).url = url;
+              let err = getErrorRespoinse(res, props);
+
+              if (onError) err = onError(err);
+              if (err) reject(err);
+            }
+          } catch (err: any) {
+            if (err.name === "AbortError") return;
+            if (onError) err = onError(err);
+            if (err) reject(err);
+          }
+        });
+      };
+    }
+
     return _apiService as IApiService<Headers>;
   },
 };
@@ -105,6 +161,8 @@ export interface IApiService<Headers = any> {
   put: (props: IMethod<Headers>) => Promise<any>;
   patch: (props: IMethod<Headers>) => Promise<any>;
   update: (props: IMethod<Headers>) => Promise<any>;
+  getBlob: (props: IMethod<Headers>) => Promise<Blob>;
+  postBlob: (props: IMethod<Headers>) => Promise<Blob>;
   setHeader: (headers: Headers) => void;
   setOnResponse: (onResponse: OnResponse) => void;
   setOnError: (onError: OnError) => void;
