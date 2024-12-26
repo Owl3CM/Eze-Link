@@ -1,8 +1,8 @@
 {
   "name": "eze-link",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Eze-Link",
-  "main": "dist/index.js",
+  "main": "dist/index.cjs",
   "source": "src/index.ts",
   "private": false,
   "engines": {
