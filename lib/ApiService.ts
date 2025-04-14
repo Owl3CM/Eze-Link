@@ -1,5 +1,5 @@
 export const ApiService = {
-  create: <Headers>({ headers, onResponse, onError, onRequest }: CreateApiProps<Headers>) => {
+  create: <Headers>({ headers, onResponse, onError, onRequest, options = {} }: CreateApiProps<Headers>) => {
     const _apiService: IApiService<Headers> = {
       get: createMethod("get"),
       delete: createMethod("delete"),
@@ -40,6 +40,7 @@ export const ApiService = {
           },
           body: body ? JSON.stringify(body) : undefined,
           signal: Aborts[abortId]!.signal,
+          ...options,
         };
 
         return new Promise<any>(async (resolve, reject) => {
@@ -73,8 +74,7 @@ export const ApiService = {
       };
     }
     function createBlobMethod(method: string) {
-      return ({ url, body, headers: _headers }: IMethod<Headers>) => {
-        const abortId = `${method}-${url.split("?")[0]}`;
+      return ({ url, body, headers: _headers, abortId = `${method}-${url.split("?")[0]}` }: IMethod<Headers>) => {
         if (Aborts[abortId]) {
           console.warn("A B O R T E D \n" + abortId + "\n?" + url.split("?")[1]);
           Aborts[abortId]!.abort();
@@ -136,6 +136,13 @@ interface CreateApiProps<Headers = any> {
   onResponse?: OnResponse;
   onError?: OnError;
   onRequest?: OnRequest<Headers>;
+  options?: {
+    mode?: RequestMode;
+    cache?: RequestCache;
+    credentials?: RequestCredentials;
+    redirect?: RequestRedirect;
+    referrerPolicy?: ReferrerPolicy;
+  };
 }
 
 type OnResponse = (res: any) => any;
@@ -153,6 +160,7 @@ export interface IMethod<Headers> {
   url: string;
   body?: any;
   headers?: Headers;
+  abortId?: string;
 }
 export interface IApiService<Headers = any> {
   get: (props: IMethod<Headers>) => Promise<any>;

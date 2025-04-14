@@ -78,6 +78,7 @@ export default class ClientBuilder<RootKey extends string> {
     getHeaders,
     limit = this.limit,
     storageKey = "",
+    abortId,
   }: CreateCashedLoadCleintProps<T, RootKey>) => {
     let offset = 0;
     let queryUrl = "";
@@ -99,7 +100,7 @@ export default class ClientBuilder<RootKey extends string> {
             const _url = queryUrl;
             let stored = clearCash ? null : this.storable.get(_storeKey);
             if (!stored) {
-              stored = (await this.api.get({ url: _url, headers })).data;
+              stored = (await this.api.get({ url: _url, headers, abortId })).data;
               loadsFunctions.hasMore = stored.length >= loadsFunctions.limit;
 
               this.storable.set(_storeKey, stored);
@@ -118,7 +119,7 @@ export default class ClientBuilder<RootKey extends string> {
         new Promise<Response>(async (resolve, reject) => {
           try {
             const _url = queryUrl + `&offset=${offset}`;
-            const { data } = await this.api.get({ url: _url, headers });
+            const { data } = await this.api.get({ url: _url, headers, abortId });
             offset += data.length;
             loadsFunctions.hasMore = data.length >= loadsFunctions.limit;
             this.storable.insert(_storeKey, data);
@@ -133,7 +134,7 @@ export default class ClientBuilder<RootKey extends string> {
         new Promise<Response>(async (resolve, reject) => {
           try {
             headers = getHeaders?.(query);
-            const url = this.generateQuery({ url: _BuildUrl(query), query: { ...query, limit: null } });
+            const url = this.generateQuery({ url: _BuildUrl(query), query });
             const { data } = await this.api.get({ url, headers });
             resolve(data as Response);
           } catch (err: any) {
@@ -153,7 +154,7 @@ export default class ClientBuilder<RootKey extends string> {
     };
     return loadsFunctions;
   };
-  OffsetPaginator = <T = IQuery, Response = any[]>({ root, url, getUrl, getHeaders, limit = this.limit }: CreateLoadCleintProps<T, RootKey>) => {
+  OffsetPaginator = <T = IQuery, Response = any[]>({ root, url, getUrl, getHeaders, limit = this.limit, abortId }: CreateLoadCleintProps<T, RootKey>) => {
     let offset = 0;
     let queryUrl = "";
     let headers: any = null;
@@ -170,7 +171,7 @@ export default class ClientBuilder<RootKey extends string> {
             headers = getHeaders?.(query);
             queryUrl = this.generateQuery({ url: _BuildUrl(query), query: { limit: loadsFunctions.limit, ...query } });
             const _url = queryUrl;
-            const { data } = await this.api.get({ url: _url, headers });
+            const { data } = await this.api.get({ url: _url, headers, abortId });
             const items = (Array.isArray(data) ? data : Object.values(data).find((v) => Array.isArray(v))) as any[];
             offset += items.length;
             loadsFunctions.hasMore = items.length >= loadsFunctions.limit;
@@ -184,9 +185,10 @@ export default class ClientBuilder<RootKey extends string> {
         new Promise<Response>(async (resolve, reject) => {
           try {
             const _url = queryUrl + `&offset=${offset}`;
-            const { data } = await this.api.get({ url: _url, headers });
-            offset += data.length;
-            loadsFunctions.hasMore = data.length >= loadsFunctions.limit;
+            const { data } = await this.api.get({ url: _url, headers, abortId });
+            const items = (Array.isArray(data) ? data : Object.values(data).find((v) => Array.isArray(v))) as any[];
+            offset += items.length;
+            loadsFunctions.hasMore = items.length >= loadsFunctions.limit;
             resolve(data);
           } catch (err: any) {
             err.retry = () => loadsFunctions.loadMore();
@@ -452,14 +454,14 @@ export default class ClientBuilder<RootKey extends string> {
         reject(_err);
       }
     });
-  GET_WithCash = <Response = any>({ root, url, query, headers, clearCash, storageKey = "" }: IGet<RootKey> & ICashed) =>
+  GET_WithCash = <Response = any>({ root, url, query, headers, clearCash, storageKey = "", abortId }: IGet<RootKey> & ICashed) =>
     new Promise<Response>(async (resolve, reject) => {
       const retry = () => this.GET_WithCash({ root, url, query, headers });
       try {
         const queryUrl = defaultGenerateQuery({ url: this.getRoot({ root, url }), query });
         let stored = clearCash ? null : this.storable.get(storageKey + queryUrl);
         if (!stored) {
-          stored = await this.api.get({ url: queryUrl, headers });
+          stored = await this.api.get({ url: queryUrl, headers, abortId });
           this.storable.set(storageKey + queryUrl, stored);
         }
         resolve(stored);
@@ -470,12 +472,12 @@ export default class ClientBuilder<RootKey extends string> {
       }
     });
 
-  POST = <Response = any>({ root, url, query, headers, getHeaders, body, onSuccess, onError }: IPost<RootKey>) =>
+  POST = <Response = any>({ root, url, query, headers, getHeaders, body, onSuccess, onError, abortId }: IPost<RootKey>) =>
     new Promise<Response>(async (resolve, reject) => {
       const retry = () => this.POST({ root, url, query, headers, body });
       try {
         const queryUrl = defaultGenerateQuery({ url: this.getRoot({ root, url }), query });
-        const res = await this.api.post({ url: queryUrl, body, headers: headers ?? getHeaders?.(query) });
+        const res = await this.api.post({ url: queryUrl, body, headers: headers ?? getHeaders?.(query), abortId });
         onSuccess?.(res.data);
         resolve(res.data);
       } catch (error) {
@@ -486,7 +488,19 @@ export default class ClientBuilder<RootKey extends string> {
       }
     });
 
-  POST_WithCash = <Response = any>({ root, url, query, headers, getHeaders, body, clearCash, storageKey = "", onError, onSuccess }: IPost<RootKey> & ICashed) =>
+  POST_WithCash = <Response = any>({
+    root,
+    url,
+    query,
+    headers,
+    getHeaders,
+    body,
+    clearCash,
+    storageKey = "",
+    onError,
+    onSuccess,
+    abortId,
+  }: IPost<RootKey> & ICashed) =>
     new Promise<Response>(async (resolve, reject) => {
       const retry = () => this.POST_WithCash({ root, url, query, headers, body, clearCash, storageKey });
       try {
@@ -494,7 +508,7 @@ export default class ClientBuilder<RootKey extends string> {
         const storeKey = storageKey + queryUrl;
         let stored = clearCash ? null : this.storable.get(storeKey);
         if (!stored) {
-          stored = await this.api.post({ url: queryUrl, body, headers: headers ?? getHeaders?.(query) });
+          stored = await this.api.post({ url: queryUrl, body, headers: headers ?? getHeaders?.(query), abortId });
           this.storable.set(storeKey, stored);
           onSuccess?.(stored);
         }
@@ -507,7 +521,7 @@ export default class ClientBuilder<RootKey extends string> {
       }
     });
 
-  PUT = <Response = any>({ root, url, query, headers, body, getHeaders, onError, onSuccess }: IPost<RootKey>) =>
+  PUT = <Response = any>({ root, url, query, headers, body, getHeaders, onError, onSuccess, abortId }: IPost<RootKey>) =>
     new Promise<Response>(async (resolve, reject) => {
       const retry = () => this.PUT({ root, url, query, body });
       try {
@@ -522,12 +536,12 @@ export default class ClientBuilder<RootKey extends string> {
       }
     });
 
-  UPDATE = <Response = any>({ root, url, query, headers, getHeaders, body, onError, onSuccess }: IPost<RootKey>) =>
+  UPDATE = <Response = any>({ root, url, query, headers, getHeaders, body, onError, onSuccess, abortId }: IPost<RootKey>) =>
     new Promise<Response>(async (resolve, reject) => {
       const retry = () => this.UPDATE({ root, url, query, body });
       try {
         const queryUrl = defaultGenerateQuery({ url: this.getRoot({ root, url }), query });
-        const res = await this.api.update({ url: queryUrl, body, headers: headers ?? getHeaders?.(query) });
+        const res = await this.api.update({ url: queryUrl, body, headers: headers ?? getHeaders?.(query), abortId });
         onSuccess?.(res.data);
         resolve(res.data);
       } catch (error) {
@@ -536,12 +550,12 @@ export default class ClientBuilder<RootKey extends string> {
         reject(error as IError);
       }
     });
-  PATCH = <Response = any>({ root, url, query, body, headers, getHeaders, onError, onSuccess }: IPost<RootKey>) =>
+  PATCH = <Response = any>({ root, url, query, body, headers, getHeaders, onError, onSuccess, abortId }: IPost<RootKey>) =>
     new Promise<Response>(async (resolve, reject) => {
       const retry = () => this.PATCH({ root, url, query, body });
       try {
         const queryUrl = defaultGenerateQuery({ url: this.getRoot({ root, url }), query });
-        const res = await this.api.patch({ url: queryUrl, body, headers: headers ?? getHeaders?.(query) });
+        const res = await this.api.patch({ url: queryUrl, body, headers: headers ?? getHeaders?.(query), abortId });
         onSuccess?.(res.data);
         resolve(res.data);
       } catch (error) {
@@ -551,12 +565,12 @@ export default class ClientBuilder<RootKey extends string> {
       }
     });
 
-  DELETE = <Response = any>({ root, url, query, body, headers, getHeaders, onError, onSuccess }: IPost<RootKey>) =>
+  DELETE = <Response = any>({ root, url, query, body, headers, getHeaders, onError, onSuccess, abortId }: IPost<RootKey>) =>
     new Promise<Response>(async (resolve, reject) => {
       const retry = () => this.DELETE({ root, url, query });
       try {
         const queryUrl = defaultGenerateQuery({ url: this.getRoot({ root, url }), query });
-        const res = await this.api.delete({ url: queryUrl, body, headers: headers ?? getHeaders?.(query) });
+        const res = await this.api.delete({ url: queryUrl, body, headers: headers ?? getHeaders?.(query), abortId });
 
         onSuccess?.(res.data);
         resolve(res.data);
@@ -591,6 +605,7 @@ type IQuery = { [key: string]: any };
 type CreateLoadCleintProps<T, RootKey> = ({ url: string; getUrl?: null } | { url?: null; getUrl: (query?: T) => string }) & {
   getHeaders?: (query?: T) => any;
   limit?: number;
+  abortId?: string;
 } & AmRoot<RootKey>;
 type CreateCashedLoadCleintProps<T, RootKey> = CreateLoadCleintProps<T, RootKey> & {
   storageKey?: string;
@@ -649,6 +664,7 @@ type IGet<RootKey> = {
   url: string;
   query?: IQuery;
   headers?: any;
+  abortId?: string;
 } & AmRoot<RootKey>;
 
 type IPost<RootKey> = {
@@ -659,6 +675,7 @@ type IPost<RootKey> = {
   getHeaders?: (query: any) => any;
   onSuccess?: (res: any) => void;
   onError?: (err: any) => void;
+  abortId?: string;
 } & AmRoot<RootKey>;
 type ICashed = {
   clearCash?: boolean;
