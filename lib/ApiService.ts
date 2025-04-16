@@ -24,8 +24,7 @@ export const ApiService = {
     };
     const Aborts: { [key: string]: AbortController | null } = {};
     function createMethod(method: string) {
-      return ({ url, body, headers: _headers }: IMethod<Headers>) => {
-        const abortId = `${method}-${url.split("?")[0]}`;
+      return ({ url, body, headers: _headers, abortId = `${method}-${url.split("?")[0]}` }: IMethod<Headers>) => {
         if (Aborts[abortId]) {
           console.warn("A B O R T E D \n" + abortId + "\n?" + url.split("?")[1]);
           Aborts[abortId]!.abort();
