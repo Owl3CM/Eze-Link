@@ -220,7 +220,7 @@ export default class ClientBuilder<RootKey extends string> {
     limit = this.limit,
     storageKey = "",
   }: CreateCashedLoadCleintProps<T, RootKey>) => {
-    let page = 0;
+    let page = 1;
     let queryUrl = "";
     let headers: any = null;
     let _storeKey = "";
@@ -232,7 +232,7 @@ export default class ClientBuilder<RootKey extends string> {
       limit,
       load: (query?: T, clearCash?: boolean) =>
         new Promise<Response>(async (resolve, reject) => {
-          page = 0;
+          page = 1;
           try {
             headers = getHeaders?.(query);
             queryUrl = this.generateQuery({ url: _BuildUrl(query), query: { limit: loadsFunctions.limit, ...query } });
@@ -277,7 +277,7 @@ export default class ClientBuilder<RootKey extends string> {
     return loadsFunctions;
   };
   Paginator = <T = IQuery, Response = any[]>({ root, url, getUrl, getHeaders, limit = this.limit }: CreateLoadCleintProps<T, RootKey>) => {
-    let page = 0;
+    let page = 1;
     let queryUrl = "";
     let headers: any = null;
 
@@ -288,7 +288,7 @@ export default class ClientBuilder<RootKey extends string> {
       limit,
       load: (query?: T) =>
         new Promise<Response>(async (resolve, reject) => {
-          page = 0;
+          page = 1;
           try {
             headers = getHeaders?.(query);
             queryUrl = this.generateQuery({ url: _BuildUrl(query), query: { limit: loadsFunctions.limit, ...query } });
