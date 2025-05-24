@@ -464,7 +464,7 @@ export default class ClientBuilder<RootKey extends string> {
           stored = await this.api.get({ url: queryUrl, headers, abortId });
           this.storable.set(storageKey + queryUrl, stored);
         }
-        resolve(stored);
+        resolve(stored.data);
       } catch (error) {
         const _err = error as IError;
         _err.retry = retry;
