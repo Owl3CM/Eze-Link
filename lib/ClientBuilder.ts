@@ -99,16 +99,14 @@ export default class ClientBuilder<RootKey extends string> {
             _storeKey = storageKey + queryUrl;
             const _url = queryUrl;
             let stored = clearCash ? null : this.storable.get(_storeKey);
+
             if (!stored) {
               stored = (await this.api.get({ url: _url, headers, abortId })).data;
-              loadsFunctions.hasMore = stored.length >= loadsFunctions.limit;
-
               this.storable.set(_storeKey, stored);
             } else {
               loadsFunctions.hasMore = true;
             }
-            // await new Promise((res) => setTimeout(res, 100));
-            offset += stored.length;
+            offset += setHasMore(loadsFunctions, stored);
             resolve(stored as Response);
           } catch (err: any) {
             err.retry = () => loadsFunctions.load(query, clearCash);
@@ -120,8 +118,8 @@ export default class ClientBuilder<RootKey extends string> {
           try {
             const _url = queryUrl + `&offset=${offset}`;
             const { data } = await this.api.get({ url: _url, headers, abortId });
-            offset += data.length;
-            loadsFunctions.hasMore = data.length >= loadsFunctions.limit;
+            offset += setHasMore(loadsFunctions, data);
+
             this.storable.insert(_storeKey, data);
             resolve(data as Response);
           } catch (err: any) {
@@ -172,9 +170,7 @@ export default class ClientBuilder<RootKey extends string> {
             queryUrl = this.generateQuery({ url: _BuildUrl(query), query: { limit: loadsFunctions.limit, ...query } });
             const _url = queryUrl;
             const { data } = await this.api.get({ url: _url, headers, abortId });
-            const items = (Array.isArray(data) ? data : Object.values(data).find((v) => Array.isArray(v))) as any[];
-            offset += items.length;
-            loadsFunctions.hasMore = items.length >= loadsFunctions.limit;
+            offset += setHasMore(loadsFunctions, data);
             resolve(data as Response);
           } catch (err: any) {
             err.retry = () => loadsFunctions.load(query);
@@ -186,9 +182,7 @@ export default class ClientBuilder<RootKey extends string> {
           try {
             const _url = queryUrl + `&offset=${offset}`;
             const { data } = await this.api.get({ url: _url, headers, abortId });
-            const items = (Array.isArray(data) ? data : Object.values(data).find((v) => Array.isArray(v))) as any[];
-            offset += items.length;
-            loadsFunctions.hasMore = items.length >= loadsFunctions.limit;
+            offset += setHasMore(loadsFunctions, data);
             resolve(data);
           } catch (err: any) {
             err.retry = () => loadsFunctions.loadMore();
@@ -241,11 +235,9 @@ export default class ClientBuilder<RootKey extends string> {
             let stored = clearCash ? null : this.storable.get(_storeKey);
             if (!stored) {
               stored = (await this.api.get({ url: _url, headers })).data;
-              loadsFunctions.hasMore = stored.length >= loadsFunctions.limit;
-
               this.storable.set(_storeKey, stored);
             }
-            page++;
+            if (setHasMore(loadsFunctions, stored) > 0) page++;
             resolve(stored as Response);
           } catch (err: any) {
             err.retry = () => loadsFunctions.load(query, clearCash);
@@ -257,8 +249,7 @@ export default class ClientBuilder<RootKey extends string> {
           try {
             const _url = queryUrl + `&page=${page}`;
             const { data } = await this.api.get({ url: _url, headers });
-            page++;
-            loadsFunctions.hasMore = data.length >= loadsFunctions.limit;
+            if (setHasMore(loadsFunctions, data) > 0) page++;
             this.storable.insert(_storeKey, data);
             resolve(data);
           } catch (err: any) {
@@ -294,8 +285,7 @@ export default class ClientBuilder<RootKey extends string> {
             queryUrl = this.generateQuery({ url: _BuildUrl(query), query: { limit: loadsFunctions.limit, ...query } });
             const _url = queryUrl;
             const { data } = await this.api.get({ url: _url, headers });
-            page++;
-            loadsFunctions.hasMore = data.length >= loadsFunctions.limit;
+            if (setHasMore(loadsFunctions, data) > 0) page++;
             resolve(data as Response);
           } catch (err: any) {
             err.retry = () => loadsFunctions.load(query);
@@ -307,8 +297,7 @@ export default class ClientBuilder<RootKey extends string> {
           try {
             const _url = queryUrl + `&page=${page}`;
             const { data } = await this.api.get({ url: _url, headers });
-            page++;
-            loadsFunctions.hasMore = data.length >= loadsFunctions.limit;
+            if (setHasMore(loadsFunctions, data) > 0) page++;
             resolve(data);
           } catch (err: any) {
             err.retry = () => loadsFunctions.loadMore();
@@ -581,6 +570,19 @@ export default class ClientBuilder<RootKey extends string> {
       }
     });
 }
+
+const setHasMore = (func: { hasMore: boolean; limit: number }, data: any) => {
+  let itemsLength = 0;
+  if (Array.isArray(data)) {
+    itemsLength = data.length;
+  } else if (typeof data === "object") {
+    const values = Object.values(data);
+    //@ts-ignore
+    itemsLength = values.find((v) => Array.isArray(v))?.length || 0;
+  }
+  func.hasMore = itemsLength >= func.limit;
+  return itemsLength;
+};
 
 const defaultGenerateQuery = ({ url, query }: GenerateQuery) => {
   if (!query) return url;
