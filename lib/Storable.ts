@@ -21,7 +21,6 @@ export default class Storable {
         }
       }
     }
-    console.log(`Storable: Inserting data into ${key}`, toStore);
 
     this.set(key, toStore);
   };
