@@ -8,11 +8,21 @@ export default class Storable {
   insert = (key: string, value: Array<any> | Object) => {
     const isArray = Array.isArray(value);
     const _stored = this.get(key) ?? (isArray ? [] : {});
-    let toStore = value;
+    let toStore = JSON.parse(JSON.stringify(value));
     if (Object.keys(_stored)?.length) {
       if (isArray) toStore = [...(_stored as any[]), ...(toStore as any[])];
-      else if (typeof toStore === "object") toStore = { ..._stored, ...toStore };
+      else if (typeof toStore === "object") {
+        for (const prop in toStore) {
+          if (Array.isArray(toStore[prop]) && Array.isArray(_stored[prop])) {
+            toStore[prop] = [..._stored[prop], ...toStore[prop]];
+          } else if (typeof toStore[prop] === "object" && typeof _stored[prop] === "object") {
+            toStore[prop] = { ..._stored[prop], ...toStore[prop] };
+          }
+        }
+      }
     }
+    console.log(`Storable: Inserting data into ${key}`, toStore);
+
     this.set(key, toStore);
   };
   remove = (store_key: string) => this.storage.removeItem(this.getCleanString(store_key));

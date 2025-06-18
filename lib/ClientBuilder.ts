@@ -103,8 +103,6 @@ export default class ClientBuilder<RootKey extends string> {
             if (!stored) {
               stored = (await this.api.get({ url: _url, headers, abortId })).data;
               this.storable.set(_storeKey, stored);
-            } else {
-              loadsFunctions.hasMore = true;
             }
             offset += setHasMore(loadsFunctions, stored);
             resolve(stored as Response);
@@ -119,6 +117,7 @@ export default class ClientBuilder<RootKey extends string> {
             const _url = queryUrl + `&offset=${offset}`;
             const { data } = await this.api.get({ url: _url, headers, abortId });
             offset += setHasMore(loadsFunctions, data);
+            console.log(data);
 
             this.storable.insert(_storeKey, data);
             resolve(data as Response);
