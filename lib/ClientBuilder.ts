@@ -39,6 +39,7 @@ export default class ClientBuilder<RootKey extends string> {
       this.IdPaginatorWithCash = this.IdPaginator;
     }
     this.api = api;
+
     if (generateQuery) this.generateQuery = generateQuery;
     if (limit) this.limit = limit;
   }
@@ -47,7 +48,7 @@ export default class ClientBuilder<RootKey extends string> {
     new Promise<Blob>(async (resolve, reject) => {
       const retry = () => this.GET_Blob({ root, url, query, headers });
       try {
-        const queryUrl = defaultGenerateQuery({ url: this.getRoot({ root, url }), query });
+        const queryUrl = this.generateQuery({ url: this.getRoot({ root, url }), query });
         const blob = await this.api.getBlob({ url: queryUrl, headers });
         resolve(blob);
       } catch (error) {
@@ -61,7 +62,7 @@ export default class ClientBuilder<RootKey extends string> {
     new Promise<Blob>(async (resolve, reject) => {
       const retry = () => this.POST_Blob({ root, url, query, headers, body });
       try {
-        const queryUrl = defaultGenerateQuery({ url: this.getRoot({ root, url }), query });
+        const queryUrl = this.generateQuery({ url: this.getRoot({ root, url }), query });
         const res = await this.api.postBlob({ url: queryUrl, body, headers });
         resolve(res);
       } catch (error) {
@@ -433,7 +434,7 @@ export default class ClientBuilder<RootKey extends string> {
     new Promise<Response>(async (resolve, reject) => {
       const retry = () => this.GET({ root, url, query, headers });
       try {
-        const queryUrl = defaultGenerateQuery({ url: this.getRoot({ root, url }), query });
+        const queryUrl = this.generateQuery({ url: this.getRoot({ root, url }), query });
         const res = await this.api.get({ url: queryUrl, headers });
         resolve(res.data);
       } catch (error) {
@@ -446,7 +447,7 @@ export default class ClientBuilder<RootKey extends string> {
     new Promise<Response>(async (resolve, reject) => {
       const retry = () => this.GET_WithCash({ root, url, query, headers });
       try {
-        const queryUrl = defaultGenerateQuery({ url: this.getRoot({ root, url }), query });
+        const queryUrl = this.generateQuery({ url: this.getRoot({ root, url }), query });
         let stored = clearCash ? null : this.storable.get(storageKey + queryUrl);
         if (!stored) {
           stored = await this.api.get({ url: queryUrl, headers, abortId });
@@ -464,7 +465,7 @@ export default class ClientBuilder<RootKey extends string> {
     new Promise<Response>(async (resolve, reject) => {
       const retry = () => this.POST({ root, url, query, headers, body });
       try {
-        const queryUrl = defaultGenerateQuery({ url: this.getRoot({ root, url }), query });
+        const queryUrl = this.generateQuery({ url: this.getRoot({ root, url }), query });
         const res = await this.api.post({ url: queryUrl, body, headers: headers ?? getHeaders?.(query), abortId });
         onSuccess?.(res.data);
         resolve(res.data);
@@ -492,7 +493,7 @@ export default class ClientBuilder<RootKey extends string> {
     new Promise<Response>(async (resolve, reject) => {
       const retry = () => this.POST_WithCash({ root, url, query, headers, body, clearCash, storageKey });
       try {
-        const queryUrl = defaultGenerateQuery({ url: this.getRoot({ root, url }), query });
+        const queryUrl = this.generateQuery({ url: this.getRoot({ root, url }), query });
         const storeKey = storageKey + queryUrl;
         let stored = clearCash ? null : this.storable.get(storeKey);
         if (!stored) {
@@ -513,7 +514,7 @@ export default class ClientBuilder<RootKey extends string> {
     new Promise<Response>(async (resolve, reject) => {
       const retry = () => this.PUT({ root, url, query, body });
       try {
-        const queryUrl = defaultGenerateQuery({ url: this.getRoot({ root, url }), query });
+        const queryUrl = this.generateQuery({ url: this.getRoot({ root, url }), query });
         const res = await this.api.put({ url: queryUrl, body, headers: headers ?? getHeaders?.(query) });
         onSuccess?.(res.data);
         resolve(res.data);
@@ -528,7 +529,7 @@ export default class ClientBuilder<RootKey extends string> {
     new Promise<Response>(async (resolve, reject) => {
       const retry = () => this.UPDATE({ root, url, query, body });
       try {
-        const queryUrl = defaultGenerateQuery({ url: this.getRoot({ root, url }), query });
+        const queryUrl = this.generateQuery({ url: this.getRoot({ root, url }), query });
         const res = await this.api.update({ url: queryUrl, body, headers: headers ?? getHeaders?.(query), abortId });
         onSuccess?.(res.data);
         resolve(res.data);
@@ -542,7 +543,7 @@ export default class ClientBuilder<RootKey extends string> {
     new Promise<Response>(async (resolve, reject) => {
       const retry = () => this.PATCH({ root, url, query, body });
       try {
-        const queryUrl = defaultGenerateQuery({ url: this.getRoot({ root, url }), query });
+        const queryUrl = this.generateQuery({ url: this.getRoot({ root, url }), query });
         const res = await this.api.patch({ url: queryUrl, body, headers: headers ?? getHeaders?.(query), abortId });
         onSuccess?.(res.data);
         resolve(res.data);
@@ -557,7 +558,7 @@ export default class ClientBuilder<RootKey extends string> {
     new Promise<Response>(async (resolve, reject) => {
       const retry = () => this.DELETE({ root, url, query });
       try {
-        const queryUrl = defaultGenerateQuery({ url: this.getRoot({ root, url }), query });
+        const queryUrl = this.generateQuery({ url: this.getRoot({ root, url }), query });
         const res = await this.api.delete({ url: queryUrl, body, headers: headers ?? getHeaders?.(query), abortId });
 
         onSuccess?.(res.data);
