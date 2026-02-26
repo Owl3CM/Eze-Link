@@ -1,39 +1,17 @@
 export const ApiService = {
   create: <Headers>({ headers, onResponse, onError, onRequest, options = {} }: CreateApiProps<Headers>) => {
-    const _apiService: IApiService<Headers> = {
-      get: createMethod("get"),
-      delete: createMethod("delete"),
-      post: createMethod("post"),
-      put: createMethod("put"),
-      patch: createMethod("patch"),
-      update: createMethod("update"),
-      getBlob: createBlobMethod("get"),
-      postBlob: createBlobMethod("post"),
-      setHeader: (newHeaders: Headers | ((headers: Headers) => Headers)) => {
-        headers = typeof newHeaders === "function" ? (newHeaders as any)(headers) : newHeaders;
-      },
-      setOnResponse: (newOnResponse: OnResponse) => {
-        onResponse = newOnResponse;
-      },
-      setOnError: (newOnError: OnError) => {
-        onError = newOnError;
-      },
-      setOnRequest: (newOnRequest: OnRequest<Headers>) => {
-        onRequest = newOnRequest;
-      },
-    };
     const Aborts: { [key: string]: AbortController | null } = {};
-    function createMethod(method: string) {
+
+    function createMethod(method: string, parseAs: "json" | "blob" = "json") {
       return ({ url, body, headers: _headers, abortId = `${method}-${url.split("?")[0]}` }: IMethod<Headers>) => {
         if (Aborts[abortId]) {
-          console.warn("A B O R T E D \n" + abortId + "\n?" + url.split("?")[1]);
           Aborts[abortId]!.abort();
         }
         Aborts[abortId] = new AbortController();
         const props = {
           method: method.toUpperCase(),
           headers: {
-            "Content-Type": "application/json",
+            ...(parseAs === "json" ? { "Content-Type": "application/json" } : {}),
             ...headers,
             ..._headers,
           },
@@ -48,87 +26,66 @@ export const ApiService = {
             const res = await fetch(url, props as RequestInit);
             Aborts[abortId] = null;
             if (res.ok) {
-              try {
-                // jsonRes = (await res.blob()) ?? (await res.json());
-                (res as any).data = await res.json();
-              } catch (er) {}
-              onResponse?.(res);
-              resolve(res);
+              if (parseAs === "blob") {
+                const blob = await res.blob();
+                onResponse?.(res);
+                resolve(blob);
+              } else {
+                try {
+                  (res as any).data = await res.json();
+                } catch (_) {
+                  (res as any).data = null;
+                }
+                onResponse?.(res);
+                resolve(res);
+              }
             } else {
               try {
                 (res as any).message = JSON.parse(await res.text());
-              } catch (e) {}
+              } catch (_) {}
               (props as any).url = url;
-              let err = getErrorRespoinse(res, props);
+              let err = getErrorResponse(res, props);
 
-              if (onError) err = onError(err);
+              if (onError) err = await onError(err);
               if (err) reject(err);
             }
           } catch (err: any) {
             if (err.name === "AbortError") return;
-            if (onError) err = onError(err);
+            if (onError) err = await onError(err);
             if (err) reject(err);
           }
         });
       };
     }
-    function createBlobMethod(method: string) {
-      return ({ url, body, headers: _headers, abortId = `${method}-${url.split("?")[0]}` }: IMethod<Headers>) => {
-        if (Aborts[abortId]) {
-          console.warn("A B O R T E D \n" + abortId + "\n?" + url.split("?")[1]);
-          Aborts[abortId]!.abort();
-        }
-        Aborts[abortId] = new AbortController();
-        const props = {
-          method: method.toUpperCase(),
-          headers: {
-            "Content-Type": "application/json",
-            ...headers,
-            ..._headers,
-          },
-          body: body ? JSON.stringify(body) : undefined,
-          signal: Aborts[abortId]!.signal,
-        };
 
-        return new Promise<Blob>(async (resolve, reject) => {
-          try {
-            // Execute onRequest hook if defined
-            await onRequest?.(props as OnRequestProps<Headers>);
-
-            // Perform fetch call
-            const res = await fetch(url, props as RequestInit);
-
-            // Reset abort controller
-            Aborts[abortId] = null;
-
-            // Handle response
-            if (res.ok) {
-              const blob = await res.blob(); // Parse response as Blob
-              onResponse?.(res);
-              resolve(blob);
-            } else {
-              try {
-                (res as any).message = JSON.parse(await res.text());
-              } catch (e) {}
-              (props as any).url = url;
-              let err = getErrorRespoinse(res, props);
-
-              if (onError) err = onError(err);
-              if (err) reject(err);
-            }
-          } catch (err: any) {
-            if (err.name === "AbortError") return;
-            if (onError) err = onError(err);
-            if (err) reject(err);
-          }
-        });
-      };
-    }
+    const _apiService: IApiService<Headers> = {
+      get: createMethod("get"),
+      delete: createMethod("delete"),
+      post: createMethod("post"),
+      put: createMethod("put"),
+      patch: createMethod("patch"),
+      update: createMethod("update"),
+      getBlob: createMethod("get", "blob"),
+      postBlob: createMethod("post", "blob"),
+      setHeader: (newHeaders: Headers | ((prev: Headers) => Headers)) => {
+        headers = typeof newHeaders === "function" ? (newHeaders as Function)(headers) : newHeaders;
+      },
+      setOnResponse: (newOnResponse: OnResponse) => {
+        onResponse = newOnResponse;
+      },
+      setOnError: (newOnError: OnError) => {
+        onError = newOnError;
+      },
+      setOnRequest: (newOnRequest: OnRequest<Headers>) => {
+        onRequest = newOnRequest;
+      },
+    };
 
     return _apiService as IApiService<Headers>;
   },
 };
-const getErrorRespoinse = (response: any, props: any) => ({ props, response, statusMessage: (StatusCodeByMessage as any)[response.status] || "Unknown Error" });
+
+const getErrorResponse = (response: any, props: any) => ({ props, response, statusMessage: (StatusCodeByMessage as any)[response.status] || "Unknown Error" });
 
 interface CreateApiProps<Headers = any> {
   headers?: Headers;
@@ -145,7 +102,7 @@ interface CreateApiProps<Headers = any> {
 }
 
 type OnResponse = (res: any) => any;
-type OnError = (err: any) => any;
+type OnError = (err: any) => Promise<any> | any;
 type OnRequest<T> = (props: OnRequestProps<T>) => void;
 
 type OnRequestProps<Headers> = {
@@ -170,13 +127,12 @@ export interface IApiService<Headers = any> {
   update: (props: IMethod<Headers>) => Promise<any>;
   getBlob: (props: IMethod<Headers>) => Promise<Blob>;
   postBlob: (props: IMethod<Headers>) => Promise<Blob>;
-  setHeader: (headers: Headers) => void;
+  setHeader: (headers: Headers | ((prev: Headers) => Headers)) => void;
   setOnResponse: (onResponse: OnResponse) => void;
   setOnError: (onError: OnError) => void;
   setOnRequest: (onRequest: OnRequest<Headers>) => void;
 }
 
-// export type IApiService<Headers> = typeof ApiService.create<Headers>;
 const StatusCodeByMessage = {
   0: "There Is No Response From Server Body Is Empty Connection May Be Very Slow",
 

@@ -26,16 +26,11 @@ export default class Storable {
   };
   remove = (store_key: string) => this.storage.removeItem(this.getCleanString(store_key));
   clear = (storageKey?: string) => {
-    if (storageKey) {
-      for (let i = 0; i < this.storage?.length; i++) {
-        let key = this.storage.key(i) as string;
-        if (key.startsWith(this.getCleanString(storageKey))) this.storage.removeItem(key);
-      }
-    } else
-      for (let i = 0; i < this.storage?.length; i++) {
-        let key = this.storage.key(i) as string;
-        if (key.startsWith(this.storeKey)) this.storage.removeItem(key);
-      }
+    const prefix = storageKey ? this.getCleanString(storageKey) : this.storeKey;
+    for (let i = this.storage.length - 1; i >= 0; i--) {
+      const key = this.storage.key(i) as string;
+      if (key.startsWith(prefix)) this.storage.removeItem(key);
+    }
   };
   select = (key: string, value: any) => (this.get(key) ?? [])[value];
 
@@ -50,9 +45,9 @@ export default class Storable {
     this.storeKey = storeKey;
   }
   static clear = (storage: "localStorage" | "sessionStorage", storageKey: string) => {
-    let _storage = storage === "localStorage" ? localStorage : sessionStorage;
-    for (let i = 0; i < _storage?.length; i++) {
-      let key = _storage.key(i) as string;
+    const _storage = storage === "localStorage" ? localStorage : sessionStorage;
+    for (let i = _storage.length - 1; i >= 0; i--) {
+      const key = _storage.key(i) as string;
       if (key.startsWith(storageKey)) _storage.removeItem(key);
     }
   };
@@ -66,18 +61,19 @@ type StorableConstructor = {
 export type IStorable = InstanceType<typeof Storable>;
 
 function getMemoryStorage() {
+  const _data = new Map<string, any>();
   const memoryStorage: any = {
-    getItem: (key: string) => memoryStorage[key] ?? null,
+    getItem: (key: string) => _data.get(key) ?? null,
     setItem: (key: string, value: any) => {
-      memoryStorage[key] = value;
-      memoryStorage.length++;
+      _data.set(key, value);
     },
     removeItem: (key: string) => {
-      delete memoryStorage[key];
-      memoryStorage.length--;
+      _data.delete(key);
     },
-    key: (index: number) => Object.keys(memoryStorage)[index] ?? null,
-    length: 0,
+    key: (index: number) => Array.from(_data.keys())[index] ?? null,
+    get length() {
+      return _data.size;
+    },
   };
   return memoryStorage as Storage;
 }
