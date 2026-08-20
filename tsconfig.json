@@ -20,8 +20,8 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react",
     "useDefineForClassFields": true
   },
-  "include": ["lib"]
+  "include": ["lib"],
+  "exclude": ["lib/__tests__"]
 }

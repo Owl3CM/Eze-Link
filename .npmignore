@@ -1,4 +1,5 @@
 src
+lib
 scripts
 .vercel
 .storybook
@@ -11,3 +12,8 @@ tsconfig.json
 rollup.*
 build-storybook.log
 vite.config.js
+.agent/USER_MANUAL_TESTS.md
+lib/__tests__
+_IgnoreMe
+pnpm-lock.yaml
+pnpm-workspace.yaml

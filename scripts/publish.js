@@ -1,39 +1,31 @@
-import pak from "../package.json" assert { type: "json" };
-import { exec } from "child_process";
-import chalk from "chalk";
+import { execFileSync } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
+import { basename, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-async function run() {
-  let version = "";
-  if (pak.version.includes("beta")) {
-    const versions = pak.version.split(".");
-    version = `${versions[0]}.${versions[1]}.${versions[2]}.${+versions[3] + 1}`;
-  } else {
-    const versions = pak.version.split(".");
-    version = `${versions[0]}.${versions[1]}.${+versions[2] + 1}`;
-  }
-  // console.log(packagePath);
-  // if (packagePath === "./dist") {
-  //   console.log(chalk.red("fuck you return this"));
-  //   return;
-  // }
-  // const removeDist = "rm -rf dist ";
-  // const buildDist = "yarn build";
-  // const copyConfig = "cp ./moonconfig.json ./dist/moonconfig.json";
-  const addComent = "git add .";
-  const publish = `yarn publish --new-version ${version} --access public`;
-  const gitStage = `git commit -m "v ${version}"`;
-  try {
-    await exec("clear");
-    // await exec(removeDist);
-    // await exec(buildDist);
-    // await exec(copyConfig);
-    await exec(addComent);
-    await exec(gitStage);
-    await exec(publish);
-    // await exec(gitPush);
-    console.log("\n" + chalk.cyanBright("published! version:" + version) + "\n");
-  } catch (error) {
-    console.error(`Error executing commands: ${error}`);
-  }
+const packageRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
+const packageJson = JSON.parse(readFileSync(resolve(packageRoot, "package.json"), "utf8"));
+const [artifactArg, confirmation] = process.argv.slice(2);
+const expectedConfirmation = `--confirm=${packageJson.name}@${packageJson.version}`;
+
+if (!artifactArg || confirmation !== expectedConfirmation) {
+  console.error(`Usage: pnpm publish:artifact -- /absolute/path/to/package.tgz ${expectedConfirmation}`);
+  process.exit(2);
 }
-run();
+
+const artifact = resolve(artifactArg);
+if (!existsSync(artifact) || !basename(artifact).endsWith(".tgz")) {
+  console.error(`Release artifact not found: ${artifact}`);
+  process.exit(2);
+}
+
+const status = execFileSync("git", ["status", "--porcelain"], { cwd: packageRoot, encoding: "utf8" });
+if (status.trim()) {
+  console.error("Refusing to publish from a dirty worktree. Commit the reviewed release first.");
+  process.exit(2);
+}
+
+execFileSync("npm", ["publish", artifact, "--access", "public"], {
+  cwd: packageRoot,
+  stdio: "inherit",
+});

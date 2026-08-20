@@ -10,7 +10,7 @@ const config = {
   plugins: [peerDepsExternal(), resolve(), commonjs(), typescript(), terser()],
   output: {
     file: packageJson.main,
-    format: "cjs",
+    format: "esm",
     sourcemap: false,
   },
 };

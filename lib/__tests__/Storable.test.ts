@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import Storable from "../Storable";
 
 // ─── Helpers ────────────────────────────────────────
@@ -64,12 +64,10 @@ describe("Storable", () => {
       expect(store.get("new")).toEqual([10, 20]);
     });
 
-    it("merges only new value's keys (existing-only keys are lost)", () => {
-      // Known behavior: insert iterates toStore's props, not _stored's
-      // Keys only in _stored (like 'a') are dropped
+    it("preserves existing-only keys during merge", () => {
       store.set("obj", { a: 1, b: 2 });
       store.insert("obj", { b: 3, c: 4 });
-      expect(store.get("obj")).toEqual({ b: 3, c: 4 });
+      expect(store.get("obj")).toEqual({ a: 1, b: 3, c: 4 });
     });
 
     it("merges nested arrays inside objects", () => {
@@ -155,5 +153,111 @@ describe("Memory Storage", () => {
     store.set("key", { v: 2 });
     expect(store.storage.length).toBe(1);
     expect(store.get("key")).toEqual({ v: 2 });
+  });
+});
+
+// ─── Primitive / Null Handling ──────────────────────
+describe("Storable set with primitives and null", () => {
+  let store: InstanceType<typeof Storable>;
+
+  beforeEach(() => {
+    store = createMemoryStorable("prim");
+  });
+
+  it("set with null removes the entry", () => {
+    store.set("key", { a: 1 });
+    store.set("key", null);
+    expect(store.get("key")).toBeNull();
+  });
+
+  it("set with number stores the number", () => {
+    store.set("key", 42);
+    expect(store.get("key")).toBe(42);
+  });
+
+  it("set with string stores the string", () => {
+    store.set("key", "hello");
+    expect(store.get("key")).toBe("hello");
+  });
+
+  it("set with boolean stores the boolean", () => {
+    store.set("key", true);
+    expect(store.get("key")).toBe(true);
+  });
+
+  it("set with undefined removes the entry", () => {
+    store.set("key", { a: 1 });
+    store.set("key", undefined);
+    expect(store.get("key")).toBeNull();
+  });
+});
+
+// ─── Cache TTL ──────────────────────────────────────
+describe("Storable TTL", () => {
+  let store: InstanceType<typeof Storable>;
+
+  beforeEach(() => {
+    store = createMemoryStorable("ttl");
+  });
+
+  it("non-expired TTL entry returns cached data", () => {
+    store.set("key", { name: "Ali" }, 60000); // 60s TTL
+    expect(store.get("key")).toEqual({ name: "Ali" });
+  });
+
+  it("expired TTL entry returns null", () => {
+    const now = Date.now();
+    vi.spyOn(Date, "now").mockReturnValueOnce(now); // set
+    store.set("key", { name: "Ali" }, 100); // 100ms TTL
+
+    vi.spyOn(Date, "now").mockReturnValueOnce(now + 200); // get — 200ms later
+    expect(store.get("key")).toBeNull();
+  });
+
+  it("expired TTL entry is removed from storage", () => {
+    const now = Date.now();
+    vi.spyOn(Date, "now").mockReturnValueOnce(now);
+    store.set("key", [1, 2, 3], 100);
+
+    vi.spyOn(Date, "now").mockReturnValueOnce(now + 200);
+    store.get("key"); // triggers removal
+    expect(store.storage.length).toBe(0);
+  });
+
+  it("no TTL = infinite cache (current behavior)", () => {
+    store.set("key", { v: 1 });
+    expect(store.get("key")).toEqual({ v: 1 });
+    // No __exp envelope — behaves exactly like before
+  });
+
+  it("TTL works with primitive values", () => {
+    store.set("num", 42, 60000);
+    expect(store.get("num")).toBe(42);
+  });
+
+  it("insert() preserves TTL envelope", () => {
+    const now = Date.now();
+    vi.spyOn(Date, "now").mockReturnValueOnce(now);
+    store.set("arr", [1, 2], 500); // 500ms TTL
+
+    store.insert("arr", [3, 4]);
+    // Data merged correctly
+    expect(store.get("arr")).toEqual([1, 2, 3, 4]);
+
+    // TTL still active — expired read returns null
+    vi.spyOn(Date, "now").mockReturnValueOnce(now + 600);
+    expect(store.get("arr")).toBeNull();
+  });
+
+  it("insert() treats an expired TTL entry as missing instead of losing fresh data", () => {
+    const now = Date.now();
+    const nowSpy = vi.spyOn(Date, "now").mockReturnValue(now);
+    store.set("arr", [1, 2], 100);
+
+    nowSpy.mockReturnValue(now + 200);
+    store.insert("arr", [3, 4]);
+
+    expect(store.get("arr")).toEqual([3, 4]);
+    nowSpy.mockRestore();
   });
 });

@@ -1,28 +1,61 @@
 export default class Storable {
   storage: Storage;
   storeKey: string;
-  set = (store_key: string, data: any) =>
-    Object.values(data).length > 0 ? this.storage.setItem(this.getCleanString(store_key), JSON.stringify(data)) : this.remove(store_key);
-  get = (store_key: string) => JSON.parse(this.storage.getItem(this.getCleanString(store_key)) as string);
+  set = (store_key: string, data: any, ttl?: number) => {
+    if (data == null || typeof data !== "object") {
+      if (data != null) {
+        const val = ttl ? { __data: data, __exp: Date.now() + ttl } : data;
+        this.storage.setItem(this.getCleanString(store_key), JSON.stringify(val));
+      } else this.remove(store_key);
+      return;
+    }
+    if (Object.values(data).length > 0) {
+      const val = ttl ? { __data: data, __exp: Date.now() + ttl } : data;
+      this.storage.setItem(this.getCleanString(store_key), JSON.stringify(val));
+    } else this.remove(store_key);
+  };
+  get = (store_key: string) => {
+    const raw = JSON.parse(this.storage.getItem(this.getCleanString(store_key)) as string);
+    if (raw && typeof raw === "object" && "__exp" in raw) {
+      if (Date.now() > raw.__exp) {
+        this.remove(store_key);
+        return null;
+      }
+      return raw.__data;
+    }
+    return raw;
+  };
 
   insert = (key: string, value: Array<any> | Object) => {
     const isArray = Array.isArray(value);
-    const _stored = this.get(key) ?? (isArray ? [] : {});
+    const rawStored = JSON.parse(this.storage.getItem(this.getCleanString(key)) as string);
+    const hasTTL = rawStored && typeof rawStored === "object" && "__exp" in rawStored;
+    if (hasTTL && Date.now() > rawStored.__exp) {
+      this.remove(key);
+      this.set(key, value);
+      return;
+    }
+    const _stored = (hasTTL ? rawStored.__data : rawStored) ?? (isArray ? [] : {});
     let toStore = JSON.parse(JSON.stringify(value));
     if (Object.keys(_stored)?.length) {
       if (isArray) toStore = [...(_stored as any[]), ...(toStore as any[])];
       else if (typeof toStore === "object") {
+        toStore = { ..._stored, ...toStore };
         for (const prop in toStore) {
           if (Array.isArray(toStore[prop]) && Array.isArray(_stored[prop])) {
             toStore[prop] = [..._stored[prop], ...toStore[prop]];
-          } else if (typeof toStore[prop] === "object" && typeof _stored[prop] === "object") {
+          } else if (typeof toStore[prop] === "object" && _stored[prop] && typeof _stored[prop] === "object") {
             toStore[prop] = { ..._stored[prop], ...toStore[prop] };
           }
         }
       }
     }
 
-    this.set(key, toStore);
+    if (hasTTL) {
+      this.storage.setItem(this.getCleanString(key), JSON.stringify({ __data: toStore, __exp: rawStored.__exp }));
+    } else {
+      this.set(key, toStore);
+    }
   };
   remove = (store_key: string) => this.storage.removeItem(this.getCleanString(store_key));
   clear = (storageKey?: string) => {

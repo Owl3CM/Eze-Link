@@ -1,50 +1,68 @@
 {
   "name": "eze-link",
-  "version": "0.2.6",
-  "description": "Eze-Link",
+  "version": "0.3.0",
+  "description": "Typed HTTP client — fetch wrapper with abort control, multi-root URL routing, caching, pagination, and uploads",
   "main": "dist/index.js",
-  "source": "src/index.ts",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "source": "lib/index.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "sideEffects": false,
   "private": false,
   "engines": {
-    "node": ">=14"
+    "node": ">=18"
   },
+  "packageManager": "pnpm@10.30.2",
   "type": "module",
   "scripts": {
-    "build": "rm -rf dist && rollup -c --exports auto",
+    "clean": "rm -rf dist",
+    "lint": "eslint \"lib/**/*.ts\"",
+    "check": "pnpm lint && pnpm test && pnpm exec tsc --noEmit",
+    "build": "pnpm check && pnpm clean && rollup -c --exports auto",
     "test": "vitest run",
-    "prod": "pnpm build && node ./scripts/publish.js && git push"
+    "release:verify": "pnpm build && npm pack --dry-run",
+    "publish:artifact": "node ./scripts/publish.js"
   },
   "devDependencies": {
     "@babel/core": "^7.19.3",
     "@rollup/plugin-commonjs": "^22.0.2",
     "@rollup/plugin-node-resolve": "^14.1.0",
-    "@types/react": "^18.0.33",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/parser": "^5.62.0",
     "babel-loader": "^8.2.5",
+    "eslint": "^8.57.1",
     "rollup": "^2.79.1",
     "rollup-plugin-peer-deps-external": "^2.2.4",
     "rollup-plugin-terser": "^7.0.2",
     "rollup-plugin-typescript2": "^0.34.1",
+    "tslib": "^2.8.1",
     "typescript": "^4.8.4",
     "vitest": "^4.0.18"
   },
   "files": [
-    "dist"
+    "dist",
+    ".agent/_index.md",
+    ".agent/context",
+    "AGENTS.md",
+    "LICENSE"
   ],
+  "license": "MIT",
   "publishConfig": {
     "access": "public"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app"
-    ]
-  },
   "keywords": [
     "eze-link",
-    "axios",
-    "react",
-    "react-native",
-    "react-query",
-    "react-query-devtools"
+    "http-client",
+    "fetch",
+    "pagination",
+    "cache",
+    "abort"
   ],
   "tags": [
     "eze-link"
