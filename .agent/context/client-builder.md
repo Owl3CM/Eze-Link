@@ -2,7 +2,7 @@
 
 High-level CRUD client with multi-root URL routing, paginated loading, and caching.
 
-**Source:** `lib/ClientBuilder.ts`
+**Published declarations:** [ClientBuilder.d.ts](../../dist/ClientBuilder.d.ts)
 
 ---
 
@@ -181,9 +181,3 @@ Extracts the array from response data:
 1. If `data` is already an array → returns it
 2. If `data` is an object → finds the first array value
 3. Otherwise → returns `[]`
-
----
-
-**Source links:**
-
-- [Published ClientBuilder declarations](../../dist/ClientBuilder.d.ts)

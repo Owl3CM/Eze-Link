@@ -2,7 +2,7 @@
 
 Storage abstraction with TTL support, key namespacing, and in-memory fallback for SSR/tests.
 
-**Source:** `lib/Storable.ts`
+**Published declarations:** [Storable.d.ts](../../dist/Storable.d.ts)
 
 ---
 
@@ -99,9 +99,3 @@ type IStorable = InstanceType<typeof Storable>;
 type StorageType = "localStorage" | "sessionStorage" | "memoryStorage" | Storage;
 type StorableConstructor = { storage?: StorageType; storeKey?: string };
 ```
-
----
-
-**Source links:**
-
-- [Published Storable declarations](../../dist/Storable.d.ts)

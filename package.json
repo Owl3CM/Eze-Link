@@ -1,11 +1,10 @@
 {
   "name": "eze-link",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Typed HTTP client — fetch wrapper with abort control, multi-root URL routing, caching, pagination, and uploads",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
-  "source": "lib/index.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -26,7 +25,8 @@
     "check": "pnpm lint && pnpm test && pnpm exec tsc --noEmit",
     "build": "pnpm check && pnpm clean && rollup -c --exports auto",
     "test": "vitest run",
-    "release:verify": "pnpm build && npm pack --dry-run",
+    "package:verify": "node ./scripts/verify-package.mjs",
+    "release:verify": "pnpm build && pnpm package:verify",
     "publish:artifact": "node ./scripts/publish.js"
   },
   "devDependencies": {
@@ -50,6 +50,7 @@
     ".agent/_index.md",
     ".agent/context",
     "AGENTS.md",
+    "CHANGELOG.md",
     "LICENSE"
   ],
   "license": "MIT",

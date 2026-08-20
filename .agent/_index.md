@@ -18,11 +18,13 @@
 | CRUD / pagination / caching | `context/client-builder.md` |
 | Storage / caching layer     | `context/storable.md`       |
 
-> **Need everything?** Read all `context/*.md` files — each is self-contained.
+> **Need everything?** Read the three focused context files listed above; each is self-contained.
 
 ## API Surface
 
-Entry point: `lib/index.ts` (barrel export)
+Published runtime entry point: `dist/index.js`
+
+Published TypeScript declaration entry point: `dist/index.d.ts`
 
 **ApiService:** `ApiService` (default + named export) — factory object with `.create()`
 **ClientBuilder:** `ClientBuilder` (default export)
@@ -37,19 +39,25 @@ Entry point: `lib/index.ts` (barrel export)
 - ❌ Don't mix `cache` with mutation methods (PUT/PATCH/DELETE) — caching is for reads only
 - ❌ Don't use `dedupe: true` on mutations — it deduplicates by `abortId`, could swallow writes
 
-## Source Structure
+## Published Package Structure
 
 ```
-lib/
-├── index.ts          # Barrel export
-├── ApiService.ts     # ApiService.create(), IApiService, IMethod, IUploadProps, RetryConfig
-├── ClientBuilder.ts  # ClientBuilder class, paginator strategies, CRUD methods
-├── Storable.ts       # Storable class, IStorable, memoryStorage
-└── __tests__/        # Test files (Vitest)
+dist/
+├── index.js          # Public ESM runtime entry point
+├── index.d.ts        # Public TypeScript declaration entry point
+├── ApiService.d.ts   # ApiService declarations
+├── ClientBuilder.d.ts
+└── Storable.d.ts
+.agent/
+├── _index.md         # This guide
+└── context/          # Focused API references
+AGENTS.md             # Installed-agent pointer
+CHANGELOG.md          # Release history
+LICENSE
+README.md
+package.json
 ```
 
-## Testing
-
-```bash
-pnpm test    # Vitest
-```
+Repository source files and test suites are intentionally excluded from the
+published package. Installed guidance describes only files available inside the
+package and the public API exposed by its runtime and declaration entry points.

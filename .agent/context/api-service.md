@@ -2,7 +2,7 @@
 
 Low-level fetch wrapper factory with explicit abort control, opt-in retry, dedupe, timeout, and upload support.
 
-**Source:** `lib/ApiService.ts`
+**Published declarations:** [ApiService.d.ts](../../dist/ApiService.d.ts)
 
 ---
 
@@ -150,9 +150,3 @@ type OnRequestProps<Headers> = {
   headers: Headers;
 };
 ```
-
----
-
-**Source links:**
-
-- [Published ApiService declarations](../../dist/ApiService.d.ts)
